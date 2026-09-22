@@ -128,7 +128,7 @@ function ParentsContent() {
 
     try {
       const cleanPhoneVal = phone.replace(/\s+/g, "").trim() || undefined;
-      const targetTenant = isSuperAdmin ? formTenantId : undefined;
+      const targetTenant = formTenantId || (userTenantId > 0 ? userTenantId : undefined);
 
       if (selectedParent) {
         // EDIT Mode

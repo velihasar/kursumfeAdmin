@@ -13,15 +13,17 @@ import { ApiDataResult } from "@/types/branch.types";
 
 export const studentKeys = {
   all: ["students"] as const,
-  lists: () => [...studentKeys.all, "list"] as const,
+  lists: (params?: { tenantId?: number }) => [...studentKeys.all, "list", params] as const,
   detail: (id: number) => [...studentKeys.all, "detail", id] as const,
 };
 
-export function useStudents() {
+export function useStudents(params?: { tenantId?: number }) {
   return useQuery<StudentGetAllDto[]>({
-    queryKey: studentKeys.lists(),
+    queryKey: studentKeys.lists(params),
     queryFn: async () => {
-      const response = await axiosInstance.get<StudentGetAllDto[]>("/api/students/getall");
+      const response = await axiosInstance.get<StudentGetAllDto[]>("/api/students/getall", {
+        params,
+      });
       return response.data;
     },
   });

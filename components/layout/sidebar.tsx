@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Building2,
   GitFork,
+  BookOpen,
   GraduationCap,
   UserCheck,
   Users,
@@ -64,6 +65,14 @@ export function Sidebar() {
       canAdd: true,
       addHref: "/admin/branches?action=new",
       addTitle: "Yeni Şube Ekle",
+    },
+    {
+      title: "Kurslar / Dersler",
+      href: "/admin/courses",
+      icon: BookOpen,
+      canAdd: true,
+      addHref: "/admin/courses?action=new",
+      addTitle: "Yeni Kurs Ekle",
     },
     {
       title: "Öğrenciler",

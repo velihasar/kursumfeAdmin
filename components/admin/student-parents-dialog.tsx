@@ -161,12 +161,15 @@ export function StudentParentsDialog({
     }
 
     try {
+      const selectedPerson = people.find((p) => p.id === selectedPersonId);
+      const targetTenantId = effectiveTenantId || selectedPerson?.tenantId || tenantId;
+
       let existingParent = parents.find((p) => p.personId === selectedPersonId);
 
       if (!existingParent) {
         const parentRes: any = await createParentMutation.mutateAsync({
           personId: selectedPersonId,
-          tenantId: tenantId,
+          tenantId: targetTenantId,
         });
         const parentId = parentRes?.data?.id || parentRes?.id;
         existingParent = { id: parentId, personId: selectedPersonId };
@@ -177,7 +180,7 @@ export function StudentParentsDialog({
         parentId: existingParent.id,
         relationship: existingRelationship,
         isPrimary: existingIsPrimary,
-        tenantId: tenantId,
+        tenantId: targetTenantId,
       });
 
       toast.success("Mevcut veli başarıyla bağlandı.");
@@ -197,12 +200,14 @@ export function StudentParentsDialog({
     }
 
     try {
+      const targetTenantId = effectiveTenantId || tenantId;
+
       const personRes: any = await createPersonMutation.mutateAsync({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim() || undefined,
         phone: phone.replace(/\s+/g, "").trim() || undefined,
-        tenantId: tenantId,
+        tenantId: targetTenantId,
       });
 
       const newPersonId = personRes?.data?.id || personRes?.id;
@@ -213,7 +218,7 @@ export function StudentParentsDialog({
 
       const parentRes: any = await createParentMutation.mutateAsync({
         personId: newPersonId,
-        tenantId: tenantId,
+        tenantId: targetTenantId,
       });
       const newParentId = parentRes?.data?.id || parentRes?.id;
 
@@ -222,7 +227,7 @@ export function StudentParentsDialog({
         parentId: newParentId,
         relationship: newRelationship,
         isPrimary: newIsPrimary,
-        tenantId: tenantId,
+        tenantId: targetTenantId,
       });
 
       toast.success("Yeni veli oluşturuldu ve başarıyla bağlandı.");
