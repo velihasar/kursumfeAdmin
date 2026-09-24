@@ -36,6 +36,9 @@ import {
   CheckCircle2,
   UserCheck,
   ShieldAlert,
+  Copy,
+  Smartphone,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/utils";
@@ -260,6 +263,42 @@ export function StudentParentsDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          {/* Mobile Linking Code Banner */}
+          {student.parentAccessCode && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/25">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-foreground">Mobil Veli Davet Kodu:</span>
+                    <code className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 font-mono font-bold text-xs tracking-wider border border-amber-500/30">
+                      {student.parentAccessCode}
+                    </code>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Veli mobil uygulamadan kaydolurken bu kodu girerek bu öğrenciyi hesabına bağlar.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(student.parentAccessCode!);
+                  toast.success(`Mobil Veli Kodu kopyalandı: ${student.parentAccessCode}`);
+                }}
+                className="h-7 text-xs font-semibold gap-1.5 border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 shrink-0"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Kodu Kopyala
+              </Button>
+            </div>
+          )}
+
           {/* Section 1: Linked Parents */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">

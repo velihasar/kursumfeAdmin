@@ -6,6 +6,7 @@ export interface StudentGetAllDto {
   tenantId?: number;
   personId: number;
   studentNumber: string;
+  parentAccessCode?: string;
   enrollmentDate: string;
   firstName?: string;
   lastName?: string;
@@ -20,6 +21,7 @@ export interface StudentGetByIdDto {
   tenantId?: number;
   personId: number;
   studentNumber: string;
+  parentAccessCode?: string;
   enrollmentDate: string;
 }
 
@@ -47,6 +49,7 @@ export interface StudentCreateResponseDto {
   id: number;
   personId: number;
   studentNumber: string;
+  parentAccessCode?: string;
   enrollmentDate: string;
 }
 
@@ -54,6 +57,7 @@ export interface StudentUpdateResponseDto {
   id: number;
   personId: number;
   studentNumber: string;
+  parentAccessCode?: string;
   enrollmentDate: string;
 }
 

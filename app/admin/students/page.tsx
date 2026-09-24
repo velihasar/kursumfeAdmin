@@ -70,6 +70,9 @@ import {
   User,
   X,
   GitFork,
+  Copy,
+  KeyRound,
+  Smartphone,
 } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -403,8 +406,11 @@ function StudentsContent() {
     const emailStr = st.person?.email?.toLowerCase() || "";
     const phoneStr = st.person?.phone?.toLowerCase() || "";
 
+    const accessCode = st.parentAccessCode?.toLowerCase() || "";
+
     const matchesSearch =
       studentNo.includes(search) ||
+      accessCode.includes(search) ||
       fullName.includes(search) ||
       emailStr.includes(search) ||
       phoneStr.includes(search);
@@ -600,9 +606,27 @@ function StudentsContent() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="font-mono bg-primary/5 text-primary border-primary/20 px-2.5 py-0.5">
-                            {st.studentNumber || "N/A"}
-                          </Badge>
+                          <div className="flex flex-col gap-1 items-start">
+                            <Badge variant="outline" className="font-mono bg-primary/5 text-primary border-primary/20 px-2 py-0.5 text-xs">
+                              {st.studentNumber || "N/A"}
+                            </Badge>
+                            {st.parentAccessCode && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(st.parentAccessCode!);
+                                  toast.success(`Mobil Veli Kodu kopyalandı: ${st.parentAccessCode}`);
+                                }}
+                                title="Mobil Veli Erişim Kodunu Kopyalamak İçin Tıklayın"
+                                className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded px-1.5 py-0.5 transition-colors cursor-pointer group"
+                              >
+                                <KeyRound className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+                                <span>{st.parentAccessCode}</span>
+                                <Copy className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
+                              </button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="font-medium">
                           {st.person ? (
