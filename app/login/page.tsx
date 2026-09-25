@@ -19,6 +19,15 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  const urlError = searchParams.get("error");
+
+  useState(() => {
+    if (urlError === "VeliAccessDenied") {
+      setTimeout(() => {
+        toast.error("Veli hesaplarının yönetim paneline giriş yetkisi bulunmamaktadır. Lütfen veli mobil uygulamasını kullanınız.");
+      }, 100);
+    }
+  });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +42,11 @@ export default function LoginPage() {
     setIsLoading(false);
 
     if (result?.error) {
-      toast.error(result.error !== "CredentialsSignin" ? result.error : "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+      if (result.error.includes("Veli") || result.error.includes("veli")) {
+        toast.error(result.error);
+      } else {
+        toast.error(result.error !== "CredentialsSignin" ? result.error : "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+      }
     } else {
       toast.success("Başarıyla giriş yapıldı!");
       window.location.href = callbackUrl;
@@ -48,16 +61,23 @@ export default function LoginPage() {
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-96 h-96 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
         
         <div className="relative z-10 flex flex-col items-start">
-          <Logo className="w-48 text-primary-foreground items-start" />
-          <p className="mt-6 text-primary-foreground/80 font-medium">Premium E-Ticaret Yönetimi</p>
+          <Logo
+            size="lg"
+            className="items-center"
+            textClassName="text-white text-3xl font-extrabold tracking-wide"
+            iconClassName="bg-white text-primary shadow-md h-11 w-11"
+          />
+          <p className="mt-4 text-primary-foreground/90 font-medium text-sm tracking-wide">
+            Eğitim Kurumları Bilgi ve Yönetim Sistemi
+          </p>
         </div>
         
         <div className="relative z-10 max-w-md">
-          <h2 className="text-3xl leading-tight mb-4">
-            Koleksiyonlarınızı zarafet ve hassasiyetle yönetin.
+          <h2 className="text-3xl font-bold leading-tight mb-4">
+            Eğitim kurumunuzun tüm operasyonlarını tek merkezden yönetin.
           </h2>
-          <p className="text-primary-foreground/70">
-            Tüm yönetim ekibiniz için envanter, siparişler ve sistem ayarlarını denetlemek adına güvenli erişim.
+          <p className="text-primary-foreground/80 leading-relaxed">
+            Öğrenci, öğretmen, ders programı, yoklama ve taksitli tahsilat süreçleriniz için bütünleşik ve güvenli yönetim platformu.
           </p>
         </div>
       </div>
@@ -69,7 +89,7 @@ export default function LoginPage() {
               Yönetici Girişi
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Haqan Wear yönetim paneline erişmek için bilgilerinizi girin.
+              Kursum Bilgi ve Yönetim Sistemi&apos;ne erişmek için bilgilerinizi girin.
             </p>
           </div>
           
@@ -84,7 +104,7 @@ export default function LoginPage() {
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="admin@haqanwear.com" 
+                    placeholder="yonetici@kursum.com" 
                     className="pl-10 h-10" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +150,7 @@ export default function LoginPage() {
               </Link>
             </p>
             <p className="text-xs text-muted-foreground">
-              Giriş yaparak, Haqan Wear Yönetim Paneli Hizmet Şartlarını kabul etmiş olursunuz.
+              Giriş yaparak, Kursum Bilgi ve Yönetim Sistemi Hizmet Şartlarını kabul etmiş olursunuz.
             </p>
           </div>
         </div>

@@ -99,16 +99,41 @@ export const authOptions = {
             /super/i.test(userRole) ||
             claimsList.some((c) => /^SuperAdmin$|^SUPER_ADMIN$|^Super Admin$/i.test(c));
 
+          // Veli / Parent kontrolü: Eğer kullanıcı sadece veli ise yönetim paneline girişi engelle
+          const isParentClaim =
+            /^Veli$|^Parent$|^OgrenciVeli$|^ÖğrenciVeli$/i.test(userRole) ||
+            claimsList.some((c) => /^Veli$|^Parent$|^OgrenciVeli$|^ÖğrenciVeli$/i.test(c));
+
+          const adminClaim = claimsList.find((c) =>
+            /^KurumSahibi$|^Kurum Sahibi$|^TenantAdmin$|^SubeYonetici$|^OKUL_ADMIN$|^ADMIN$|^EDITOR$/i.test(c)
+          );
+
+          const isTeacherClaim = claimsList.some((c) =>
+            /^Teacher$|^Ogretmen$|^Öğretmen$|^Egitmen$|^Eğitmen$/i.test(c)
+          );
+
+          const hasManagementOrTeaching =
+            hasSuperAdminClaim ||
+            !!adminClaim ||
+            isTeacherClaim ||
+            /^KurumSahibi$|^TenantAdmin$|^SubeYonetici$|^ADMIN$|^Teacher$|^Ogretmen$|^Öğretmen$/i.test(userRole);
+
+          if (isParentClaim && !hasManagementOrTeaching) {
+            console.warn("Veli hesabı yönetim paneline girmeye çalıştı:", credentials.email);
+            throw new Error("Veli hesaplarının yönetim paneline giriş yetkisi bulunmamaktadır. Lütfen veli mobil uygulamasını kullanınız.");
+          }
+
           if (hasSuperAdminClaim && userTenantId === 0) {
             userRole = "SUPER_ADMIN";
           } else {
-            const matchedClaim = claimsList.find((c) =>
-              /^KurumSahibi$|^Kurum Sahibi$|^TenantAdmin$|^SubeYonetici$|^OKUL_ADMIN$|^EDITOR$/i.test(c)
-            );
-            if (matchedClaim) {
-              userRole = matchedClaim;
-            } else if (!userRole || userRole === "Person" || userRole === "Unknown" || userRole === "SUPER_ADMIN") {
-              userRole = "KurumSahibi";
+            if (adminClaim || /^KurumSahibi$|^TenantAdmin$|^SubeYonetici$|^ADMIN$/i.test(userRole)) {
+              userRole = adminClaim || (userRole && userRole !== "Person" && userRole !== "Unknown" ? userRole : "KurumSahibi");
+            } else if (isTeacherClaim || /^Teacher$|^Ogretmen$|^Öğretmen$|^Egitmen$|^Eğitmen$/i.test(userRole)) {
+              userRole = "Ogretmen";
+            } else if (isParentClaim) {
+              userRole = "Veli";
+            } else {
+              userRole = userRole && userRole !== "Person" && userRole !== "Unknown" ? userRole : "KurumSahibi";
             }
           }
 

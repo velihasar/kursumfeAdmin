@@ -130,9 +130,12 @@ export function useUpdateUserGroups() {
       });
       return res.data;
     },
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["user-groups", vars.userId] });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSuccess: async (_, vars) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["user-groups"] }),
+        queryClient.invalidateQueries({ queryKey: ["users"] }),
+      ]);
+      await queryClient.refetchQueries({ queryKey: ["users"] });
       toast.success("Kullanıcı rolleri başarıyla güncellendi.");
     },
     onError: (err: any) => {

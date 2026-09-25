@@ -23,7 +23,7 @@ export function Header() {
   const user = session?.user as any;
   const role = user?.userRole || user?.role || "Kullanıcı";
   const fullName = user?.name || user?.fullName || "Yönetici";
-  const email = user?.email || "admin@okulbenim.com";
+  const email = user?.email || "admin@kursum.com";
 
   // Initials for avatar
   const initials = fullName

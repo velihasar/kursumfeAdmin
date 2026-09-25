@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { ShieldCheck, Plus, Edit, Trash2, Key } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { checkIsSuperAdmin } from "@/lib/utils";
 
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from "@/hooks/useRoles";
 import { Role } from "@/types/api.types";
@@ -35,9 +36,16 @@ import {
 } from "@/components/ui/breadcrumb";
 
 export default function RolesPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const role = (session?.user as any)?.role;
+  const isSuperAdmin = checkIsSuperAdmin(session?.user);
+
+  useEffect(() => {
+    if (session && !isSuperAdmin) {
+      router.replace("/admin/unauthorized");
+    }
+  }, [session, isSuperAdmin, router]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [permissionsRole, setPermissionsRole] = useState<Role | null>(null);
@@ -129,7 +137,7 @@ export default function RolesPage() {
             >
               <Key className="h-3.5 w-3.5" /> Yetkileri Yönet
             </Button>
-            {role === "SUPER_ADMIN" && (
+            {isSuperAdmin && (
               <>
                 <Button
                   variant="ghost"
@@ -171,7 +179,7 @@ export default function RolesPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        {role === "SUPER_ADMIN" && (
+        {isSuperAdmin && (
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" /> Yeni Rol Ekle
           </Button>

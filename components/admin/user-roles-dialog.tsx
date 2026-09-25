@@ -21,12 +21,14 @@ interface UserRolesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
+  onSuccess?: () => void;
 }
 
 export function UserRolesDialog({
   open,
   onOpenChange,
   user,
+  onSuccess,
 }: UserRolesDialogProps) {
   const userId = user?.userId ?? user?.UserId ?? user?.id;
   const { data: allRoles, isLoading: loadingRoles } = useRoles();
@@ -114,7 +116,10 @@ export function UserRolesDialog({
         groupIds: Array.from(selectedIds),
       },
       {
-        onSuccess: () => onOpenChange(false),
+        onSuccess: () => {
+          onOpenChange(false);
+          onSuccess?.();
+        },
       }
     );
   };

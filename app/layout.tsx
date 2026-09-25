@@ -15,8 +15,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Haqan Admin Dashboard",
-  description: "Light-themed standalone admin dashboard",
+  title: {
+    default: "Kursum | Eğitim Kurumları Bilgi ve Yönetim Sistemi",
+    template: "%s | Kursum",
+  },
+  description: "Kursum - Eğitim Kurumları Bilgi ve Yönetim Sistemi",
 };
 
 export default function RootLayout({

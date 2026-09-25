@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn, checkIsSuperAdmin } from "@/lib/utils";
+import { cn, checkIsSuperAdmin, checkIsOnlyTeacher } from "@/lib/utils";
 import {
   LayoutDashboard,
   Building2,
@@ -44,6 +44,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const isSuperAdmin = checkIsSuperAdmin(session?.user);
+  const isOnlyTeacher = checkIsOnlyTeacher(session?.user);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems: NavItem[] = [
@@ -57,6 +58,7 @@ export function Sidebar() {
       title: "Kurumlar / Okullar",
       href: "/admin/tenants",
       icon: Building2,
+      superAdminOnly: true,
       canAdd: true,
       addHref: "/admin/tenants?action=new",
       addTitle: "Yeni Kurum Ekle",
@@ -70,6 +72,30 @@ export function Sidebar() {
       addTitle: "Yeni Şube Ekle",
     },
     {
+      title: "Öğretmenler",
+      href: "/admin/teachers",
+      icon: UserCheck,
+      canAdd: true,
+      addHref: "/admin/teachers?action=new",
+      addTitle: "Yeni Öğretmen Ekle",
+    },
+    {
+      title: "Öğrenciler",
+      href: "/admin/students",
+      icon: GraduationCap,
+      canAdd: true,
+      addHref: "/admin/students?action=new",
+      addTitle: "Yeni Öğrenci Kaydet",
+    },
+    {
+      title: "Veliler",
+      href: "/admin/parents",
+      icon: Users,
+      canAdd: true,
+      addHref: "/admin/parents?action=new",
+      addTitle: "Yeni Veli Kaydet",
+    },
+    {
       title: "Kurslar / Dersler",
       href: "/admin/courses",
       icon: BookOpen,
@@ -81,7 +107,6 @@ export function Sidebar() {
       title: "Yoklama & Devam",
       href: "/admin/attendances",
       icon: ClipboardCheck,
-      hideForSuperAdmin: true,
       canAdd: true,
       addHref: "/admin/attendances?action=new",
       addTitle: "Yeni Yoklama Al",
@@ -103,33 +128,6 @@ export function Sidebar() {
       addTitle: "Bakiye Yükle",
     },
     {
-      title: "Öğrenciler",
-      href: "/admin/students",
-      icon: GraduationCap,
-      hideForSuperAdmin: true,
-      canAdd: true,
-      addHref: "/admin/students?action=new",
-      addTitle: "Yeni Öğrenci Kaydet",
-    },
-    {
-      title: "Öğretmenler",
-      href: "/admin/teachers",
-      icon: UserCheck,
-      hideForSuperAdmin: true,
-      canAdd: true,
-      addHref: "/admin/teachers?action=new",
-      addTitle: "Yeni Öğretmen Ekle",
-    },
-    {
-      title: "Veliler",
-      href: "/admin/parents",
-      icon: Users,
-      hideForSuperAdmin: true,
-      canAdd: true,
-      addHref: "/admin/parents?action=new",
-      addTitle: "Yeni Veli Kaydet",
-    },
-    {
       title: "Kullanıcılar",
       href: "/admin/users",
       icon: UserCog,
@@ -141,18 +139,31 @@ export function Sidebar() {
       title: "Roller & İzinler",
       href: "/admin/roles",
       icon: ShieldCheck,
+      superAdminOnly: true,
       canAdd: true,
       addHref: "/admin/roles?action=new",
       addTitle: "Yeni Rol Ekle",
     },
   ];
 
-  const visibleItems = navItems.filter((item) => {
-    if (isSuperAdmin) {
-      return !item.hideForSuperAdmin;
-    }
-    return !item.superAdminOnly;
-  });
+  let visibleItems: NavItem[] = [];
+  if (isSuperAdmin) {
+    visibleItems = navItems.filter((item) =>
+      ["/admin/tenants", "/admin/users", "/admin/roles"].includes(item.href)
+    );
+  } else if (isOnlyTeacher) {
+    visibleItems = navItems.filter((item) =>
+      item.href === "/admin/attendances"
+    );
+  } else {
+    visibleItems = navItems.filter((item) => !item.superAdminOnly);
+  }
+
+  const logoHref = isSuperAdmin
+    ? "/admin/tenants"
+    : isOnlyTeacher
+    ? "/admin/attendances"
+    : "/admin";
 
   return (
     <div 
@@ -163,7 +174,7 @@ export function Sidebar() {
     >
       <div className={cn("flex h-16 items-center border-b border-border", isCollapsed ? "justify-center px-0" : "justify-between px-6")}>
         {!isCollapsed && (
-          <Link href="/admin" className="shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95">
+          <Link href={logoHref} className="shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95">
             <Logo className="w-32 text-primary" />
           </Link>
         )}

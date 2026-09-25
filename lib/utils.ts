@@ -114,3 +114,76 @@ export function checkIsSuperAdmin(user?: any): boolean {
 
   return hasSuperRole && userTenantId === 0;
 }
+
+export function checkIsAdminOrOwner(user?: any): boolean {
+  if (!user) return false;
+  const userRole = (user.role || user.userRole || "").toString().trim().toLowerCase();
+  const claims: string[] = Array.isArray(user.claims) ? user.claims : [];
+
+  const isAdminRole =
+    userRole === "kurumsahibi" ||
+    userRole === "kurum sahibi" ||
+    userRole === "tenantadmin" ||
+    userRole === "admin" ||
+    userRole === "okul_admin" ||
+    userRole === "subeyonetici" ||
+    userRole === "şubeyönetici" ||
+    userRole === "sube yonetici" ||
+    userRole === "editor";
+
+  const hasAdminClaim = claims.some((c) =>
+    typeof c === "string" &&
+    /^kurumsahibi$|^kurum sahibi$|^tenantadmin$|^admin$|^okul_admin$|^subeyonetici$|^şubeyönetici$|^editor$/i.test(c.trim())
+  );
+
+  return isAdminRole || hasAdminClaim;
+}
+
+export function checkIsTeacher(user?: any): boolean {
+  if (!user) return false;
+  const userRole = (user.role || user.userRole || "").toString().trim().toLowerCase();
+  const claims: string[] = Array.isArray(user.claims) ? user.claims : [];
+
+  const isTeacherRole =
+    userRole === "teacher" ||
+    userRole === "ogretmen" ||
+    userRole === "öğretmen" ||
+    userRole === "egitmen" ||
+    userRole === "eğitmen";
+
+  const hasTeacherClaim = claims.some((c) =>
+    typeof c === "string" && /^teacher$|^ogretmen$|^öğretmen$|^egitmen$|^eğitmen$/i.test(c.trim())
+  );
+
+  return isTeacherRole || hasTeacherClaim;
+}
+
+export function checkIsOnlyTeacher(user?: any): boolean {
+  if (!user) return false;
+  // Eğer SuperAdmin veya KurumSahibi/Admin yetkisi varsa, sadece öğretmen değildir
+  if (checkIsSuperAdmin(user)) return false;
+  if (checkIsAdminOrOwner(user)) return false;
+
+  return checkIsTeacher(user);
+}
+
+export function checkIsParent(user?: any): boolean {
+  if (!user) return false;
+  const userRole = (user.role || user.userRole || "").toString().trim().toLowerCase();
+  const claims: string[] = Array.isArray(user.claims) ? user.claims : [];
+
+  const isParentRole =
+    userRole === "veli" ||
+    userRole === "parent" ||
+    userRole === "ogrenciveli" ||
+    userRole === "öğrenciveli";
+
+  const hasParentClaim = claims.some((c) =>
+    typeof c === "string" && /^veli$|^parent$|^ogrenciveli$|^öğrenciveli$/i.test(c.trim())
+  );
+
+  return isParentRole || hasParentClaim;
+}
+
+
+

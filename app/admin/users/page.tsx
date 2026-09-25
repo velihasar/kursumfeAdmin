@@ -177,16 +177,20 @@ export default function UsersPage() {
       header: "Roller",
       cell: ({ row }) => {
         const groups = row.original.userGroups || row.original.UserGroups || [];
-        if (groups.length === 0) {
+        if (!groups || groups.length === 0) {
           return <span className="text-xs text-muted-foreground italic">Rol Atanmamış</span>;
         }
         return (
           <div className="flex flex-wrap gap-1 max-w-[200px]">
-            {groups.map((g) => (
-              <Badge key={g.id} variant="secondary" className="text-[11px] font-medium px-2 py-0.5">
-                {g.label}
-              </Badge>
-            ))}
+            {groups.map((g: any, idx: number) => {
+              const label = g.label || g.Label || g.groupName || g.GroupName || (typeof g === "string" ? g : `Rol #${g.id || g.Id || idx}`);
+              const key = g.id || g.Id || idx;
+              return (
+                <Badge key={key} variant="secondary" className="text-[11px] font-medium px-2 py-0.5">
+                  {label}
+                </Badge>
+              );
+            })}
           </div>
         );
       },
@@ -303,9 +307,13 @@ export default function UsersPage() {
       <UserRolesDialog
         open={!!rolesUser}
         onOpenChange={(open) => {
-          if (!open) setRolesUser(null);
+          if (!open) {
+            setRolesUser(null);
+            refetch();
+          }
         }}
         user={rolesUser}
+        onSuccess={() => refetch()}
       />
 
       <AlertDialog

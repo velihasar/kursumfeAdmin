@@ -51,6 +51,51 @@ export default async function proxy(req: NextRequest) {
       if (!isExactAdminDashboard && !isAllowedPrefix) {
         return NextResponse.redirect(new URL("/admin/unauthorized", req.url));
       }
+    } else {
+      // SuperAdmin OLMAYAN kullanıcılar Roller & İzinler veya Kurumlar sayfalarına doğrudan erişemez
+      if (pathname.startsWith("/admin/roles") || pathname.startsWith("/admin/tenants")) {
+        return NextResponse.redirect(new URL("/admin/unauthorized", req.url));
+      }
+    }
+
+    // VELİ / PARENT kontrolü: Veli hesabı olanların yönetim paneline erişimini kesinlikle engelle
+    const isParent =
+      /^Veli$|^Parent$|^OgrenciVeli$|^ÖğrenciVeli$/i.test(userRole.trim()) ||
+      claims.some((c) => typeof c === "string" && /^Veli$|^Parent$|^OgrenciVeli$|^ÖğrenciVeli$/i.test(c.trim()));
+
+    // Yönetici / Kurum Sahibi kontrolü
+    const isKurumAdmin =
+      /^KurumSahibi$|^Kurum Sahibi$|^TenantAdmin$|^SubeYonetici$|^OKUL_ADMIN$|^ADMIN$|^EDITOR$/i.test(userRole.trim()) ||
+      claims.some((c) => typeof c === "string" && /^KurumSahibi$|^Kurum Sahibi$|^TenantAdmin$|^SubeYonetici$|^OKUL_ADMIN$|^ADMIN$|^EDITOR$/i.test(c.trim()));
+
+    const isTeacher =
+      /^teacher$|^ogretmen$|^öğretmen$|^egitmen$|^eğitmen$/i.test(userRole.trim()) ||
+      claims.some((c) => typeof c === "string" && /^teacher$|^ogretmen$|^öğretmen$|^egitmen$|^eğitmen$/i.test(c.trim()));
+
+    if (isParent && !isSuperAdmin && !isKurumAdmin && !isTeacher) {
+      return NextResponse.redirect(new URL("/login?error=VeliAccessDenied", req.url));
+    }
+
+    // SADECE ÖĞRETMEN olan (Kurum Sahibi veya Admin yetkisi bulunmayan) kullanıcılar için kısıtlama
+    const isOnlyTeacher = isTeacher && !isSuperAdmin && !isKurumAdmin;
+
+    if (isOnlyTeacher) {
+      const teacherAllowedPrefixes = [
+        "/admin/attendances",
+        "/admin/profile",
+        "/admin/unauthorized",
+      ];
+
+      const isAllowed = teacherAllowedPrefixes.some((prefix) =>
+        pathname.startsWith(prefix)
+      );
+
+      if (!isAllowed) {
+        if (pathname === "/admin" || pathname === "/admin/") {
+          return NextResponse.redirect(new URL("/admin/attendances", req.url));
+        }
+        return NextResponse.redirect(new URL("/admin/unauthorized", req.url));
+      }
     }
   }
 

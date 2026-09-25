@@ -150,6 +150,16 @@ function BranchesContent() {
       return;
     }
 
+    if (!phone.trim()) {
+      toast.error("Telefon numarası zorunludur.");
+      return;
+    }
+
+    if (!address.trim()) {
+      toast.error("Şube adresi zorunludur.");
+      return;
+    }
+
     if (selectedBranch) {
       // Update
       updateBranchMutation.mutate(
@@ -157,8 +167,8 @@ function BranchesContent() {
           id: selectedBranch.id,
           tenantId: isSuperAdmin ? formTenantId : undefined,
           name: name.trim(),
-          address: address.trim() || undefined,
-          phone: phone.replace(/\s+/g, "").trim() || undefined,
+          address: address.trim(),
+          phone: phone.replace(/\s+/g, "").trim(),
           isActive,
         },
         {
@@ -182,8 +192,8 @@ function BranchesContent() {
         {
           tenantId: isSuperAdmin ? formTenantId : undefined,
           name: name.trim(),
-          address: address.trim() || undefined,
-          phone: phone.replace(/\s+/g, "").trim() || undefined,
+          address: address.trim(),
+          phone: phone.replace(/\s+/g, "").trim(),
         },
         {
           onSuccess: (res) => {
@@ -348,7 +358,7 @@ function BranchesContent() {
               <div className="relative w-full md:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Şube adı, telefon veya adres..."
+                  placeholder="Şube ara..."
                   className="pl-9 h-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -535,7 +545,7 @@ function BranchesContent() {
                 </Label>
                 <Input
                   id="branch-name"
-                  placeholder="Örn: 10-A, Sayısal-1, Merkez Kampüs"
+                  placeholder="Şube adını giriniz"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -544,29 +554,29 @@ function BranchesContent() {
 
               {/* Telefon */}
               <div className="space-y-2">
-                <Label htmlFor="branch-phone" className="flex items-center justify-between">
-                  <span>Telefon Numarası</span>
-                  <span className="text-[10px] text-muted-foreground font-normal">(Opsiyonel)</span>
+                <Label htmlFor="branch-phone">
+                  Telefon Numarası <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="branch-phone"
                   placeholder="05xxxxxxxxx"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  required
                 />
               </div>
 
               {/* Adres */}
               <div className="space-y-2">
-                <Label htmlFor="branch-address" className="flex items-center justify-between">
-                  <span>Şube Adresi</span>
-                  <span className="text-[10px] text-muted-foreground font-normal">(Opsiyonel)</span>
+                <Label htmlFor="branch-address">
+                  Şube Adresi <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="branch-address"
-                  placeholder="İlçe / Şehir adresi giriniz..."
+                  placeholder="Şube adresini giriniz"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
+                  required
                 />
               </div>
 

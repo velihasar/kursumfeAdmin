@@ -8,6 +8,8 @@ import { usePeople, useCreatePerson, useUpdatePerson, useUploadPersonPhoto } fro
 import { useTenants } from "@/hooks/useTenants";
 import { useBranches } from "@/hooks/useBranches";
 import { useTeacherBranches, useCreateTeacherBranch, useDeleteTeacherBranch } from "@/hooks/useTeacherBranches";
+import { useUsers, useUpdateUserGroups, useChangePassword, User as UserType } from "@/hooks/useUsers";
+import { useRoles } from "@/hooks/useRoles";
 import { TeacherGetAllDto } from "@/types/teacher.types";
 import { PersonGetAllDto } from "@/types/person.types";
 import {
@@ -22,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -64,6 +67,13 @@ import {
   Camera,
   User,
   GitFork,
+  KeyRound,
+  Copy,
+  Check,
+  Shuffle,
+  Share2,
+  ShieldCheck,
+  RotateCcw,
 } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -84,6 +94,11 @@ function TeachersContent() {
   const { data: tenants } = useTenants();
   const { data: branches } = useBranches();
   const { data: teacherBranches, refetch: refetchTeacherBranches } = useTeacherBranches();
+  const { data: roles } = useRoles();
+  const { query: usersQuery, createMutation: createUserMutation, updateMutation: updateUserMutation } = useUsers(1, 1000);
+  const changePasswordMutation = useChangePassword();
+
+  const allUsers: UserType[] = Array.isArray(usersQuery.data) ? usersQuery.data : (usersQuery.data as any)?.data || [];
 
   // Mutations
   const createTeacherMutation = useCreateTeacher();
@@ -94,6 +109,13 @@ function TeachersContent() {
   const uploadPhotoMutation = useUploadPersonPhoto();
   const createTeacherBranchMutation = useCreateTeacherBranch();
   const deleteTeacherBranchMutation = useDeleteTeacherBranch();
+  const updateUserGroupsMutation = useUpdateUserGroups();
+
+  // Şifre Üreteci: Krs.[4 haneli random rakam]! (Örn: Krs.8492!)
+  const generateRandomPassword = () => {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `Krs.${randomNum}!`;
+  };
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
@@ -124,6 +146,13 @@ function TeachersContent() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | undefined>(undefined);
 
+  // Kullanıcı Giriş Hesabı & Şifre State'leri
+  const [matchedUser, setMatchedUser] = useState<UserType | null>(null);
+  const [createUserAccount, setCreateUserAccount] = useState(true);
+  const [resetPasswordMode, setResetPasswordMode] = useState(false);
+  const [tempPassword, setTempPassword] = useState(generateRandomPassword());
+  const [copied, setCopied] = useState(false);
+
   // Open modal if ?action=new
   useEffect(() => {
     if (searchParams.get("action") === "new") {
@@ -144,6 +173,11 @@ function TeachersContent() {
     setPhotoUrl("");
     setSelectedBranchId(undefined);
     setStartDate(new Date().toISOString().split("T")[0]);
+    setMatchedUser(null);
+    setCreateUserAccount(true);
+    setResetPasswordMode(false);
+    setTempPassword(generateRandomPassword());
+    setCopied(false);
     setIsFormOpen(true);
   };
 
@@ -152,6 +186,13 @@ function TeachersContent() {
     const person = people?.find((p) => p.id === teacher.personId);
     const existingTb = (teacherBranches || []).find((tb) => tb.teacherId === teacher.id);
 
+    const teacherEmail = (teacher.email || person?.email || "").toLowerCase().trim();
+    const linkedUser = allUsers.find((u) => {
+      const uEmail = (u.email || u.Email || "").toLowerCase().trim();
+      return teacherEmail && uEmail === teacherEmail;
+    });
+
+    setMatchedUser(linkedUser || null);
     setPersonSelectionMode("edit_person");
     setSelectedPersonId(teacher.personId);
     const effectiveTenantId = teacher.tenantId || person?.tenantId || userTenantId;
@@ -164,7 +205,58 @@ function TeachersContent() {
     setDateOfBirth(teacher.dateOfBirth ? teacher.dateOfBirth.split("T")[0] : person?.dateOfBirth ? person.dateOfBirth.split("T")[0] : "");
     setStartDate(teacher.startDate ? teacher.startDate.split("T")[0] : new Date().toISOString().split("T")[0]);
     setSelectedBranchId(existingTb?.branchId);
+    setCreateUserAccount(!linkedUser);
+    setResetPasswordMode(false);
+    setTempPassword(generateRandomPassword());
+    setCopied(false);
     setIsFormOpen(true);
+  };
+
+  const handleCopyCredentials = () => {
+    if (!email.trim()) {
+      toast.error("Lütfen önce bir e-posta adresi giriniz.");
+      return;
+    }
+    const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const teacherFullName = `${firstName.trim()} ${lastName.trim()}`.trim() || "Öğretmenimiz";
+    
+    const isReset = selectedTeacher && matchedUser;
+    const msg = isReset
+      ? `Sayın ${teacherFullName},\n\nKursum sistemine giriş şifreniz güncellenmiştir.\n\n🌐 Giriş Adresi: ${siteUrl}/login\n📧 E-posta: ${email.trim()}\n🔑 Yeni Geçici Şifreniz: ${tempPassword}\n\nSisteme giriş yaptıktan sonra sağ üstteki Profil ekranından şifrenizi dilediğiniz gibi değiştirebilirsiniz.\nİyi çalışmalar dileriz.`
+      : `Sayın ${teacherFullName},\n\nKursum sistemine öğretmen giriş hesabınız oluşturulmuştur.\n\n🌐 Giriş Adresi: ${siteUrl}/login\n📧 E-posta: ${email.trim()}\n🔑 Geçici Şifreniz: ${tempPassword}\n\nSisteme giriş yaptıktan sonra sağ üstteki Profil ekranından şifrenizi dilediğiniz gibi değiştirebilirsiniz.\nİyi çalışmalar dileriz.`;
+
+    navigator.clipboard.writeText(msg);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+    toast.success("Giriş bilgileri panoya kopyalandı!");
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!email.trim()) {
+      toast.error("Lütfen önce bir e-posta adresi giriniz.");
+      return;
+    }
+    const cleanPhone = phone.replace(/\D/g, "");
+    const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const teacherFullName = `${firstName.trim()} ${lastName.trim()}`.trim() || "Öğretmenimiz";
+    
+    const isReset = selectedTeacher && matchedUser;
+    const msg = isReset
+      ? `Sayın ${teacherFullName},\n\nKursum sistemine giriş şifreniz güncellenmiştir.\n\n🌐 Giriş Adresi: ${siteUrl}/login\n📧 E-posta: ${email.trim()}\n🔑 Yeni Geçici Şifreniz: ${tempPassword}\n\nSisteme giriş yaptıktan sonra sağ üstteki Profil ekranından şifrenizi dilediğiniz gibi değiştirebilirsiniz.\nİyi çalışmalar dileriz.`
+      : `Sayın ${teacherFullName},\n\nKursum sistemine öğretmen giriş hesabınız oluşturulmuştur.\n\n🌐 Giriş Adresi: ${siteUrl}/login\n📧 E-posta: ${email.trim()}\n🔑 Geçici Şifreniz: ${tempPassword}\n\nSisteme giriş yaptıktan sonra sağ üstteki Profil ekranından şifrenizi dilediğiniz gibi değiştirebilirsiniz.\nİyi çalışmalar dileriz.`;
+
+    let formattedPhone = cleanPhone;
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = "90" + formattedPhone.substring(1);
+    } else if (formattedPhone.startsWith("5")) {
+      formattedPhone = "90" + formattedPhone;
+    }
+
+    const whatsappUrl = formattedPhone
+      ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+    window.open(whatsappUrl, "_blank");
   };
 
   const handlePhotoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,11 +333,68 @@ function TeachersContent() {
           });
         }
 
+        // Kullanıcı Senkronizasyonu & Şifre Güncelleme (Edit Flow)
+        if (matchedUser) {
+          const userPayloadId = matchedUser.id || matchedUser.userId || (matchedUser as any).UserId;
+          if (userPayloadId) {
+            try {
+              await updateUserMutation.mutateAsync({
+                userId: userPayloadId,
+                fullName: `${firstName.trim()} ${lastName.trim()}`,
+                email: email.trim() || matchedUser.email,
+                mobilePhones: phone.replace(/\s+/g, "").trim() || "",
+                tenantId: targetTenant,
+              });
+            } catch (uErr) {
+              console.error("User sync error in edit:", uErr);
+            }
+
+            if (resetPasswordMode && tempPassword.trim()) {
+              try {
+                await changePasswordMutation.mutateAsync({
+                  userId: userPayloadId,
+                  password: tempPassword.trim(),
+                });
+              } catch (pErr) {
+                console.error("Password reset error in edit:", pErr);
+              }
+            }
+          }
+        } else if (createUserAccount && email.trim() && tempPassword.trim()) {
+          // Öğretmenin hesabı yoksa edit modunda yeni hesap açma
+          try {
+            const userRes = await createUserMutation.mutateAsync({
+              fullName: `${firstName.trim()} ${lastName.trim()}`,
+              email: email.trim(),
+              mobilePhones: phone.replace(/\s+/g, "").trim(),
+              password: tempPassword.trim(),
+              status: true,
+              tenantId: targetTenant,
+            });
+
+            const newUserId = userRes?.data?.userId || userRes?.data?.id || userRes?.data?.UserId || userRes?.userId || userRes?.id;
+            const teacherRole = (roles || []).find((r) => {
+              const gName = (r.groupName || (r as any).name || "").toLowerCase();
+              return gName.includes("öğretmen") || gName.includes("ogretmen") || gName.includes("teacher");
+            });
+
+            if (newUserId && teacherRole?.id) {
+              await updateUserGroupsMutation.mutateAsync({
+                userId: newUserId,
+                groupIds: [teacherRole.id],
+              });
+            }
+          } catch (userErr: any) {
+            console.error("User creation error in edit:", userErr);
+          }
+        }
+
         toast.success("Öğretmen bilgileri başarıyla güncellendi.");
         setIsFormOpen(false);
         refetchTeachers();
         refetchPeople();
         refetchTeacherBranches();
+        usersQuery.refetch();
       } else {
         // Create New Teacher
         let targetPersonId = selectedPersonId;
@@ -308,11 +457,43 @@ function TeachersContent() {
           });
         }
 
+        // Otomatik Kullanıcı Hesabı & Öğretmen Rolü Oluşturma
+        if (createUserAccount && email.trim() && tempPassword.trim()) {
+          try {
+            const targetTenant = isSuperAdmin ? selectedTenantId : userTenantId;
+            const userRes = await createUserMutation.mutateAsync({
+              fullName: `${firstName.trim()} ${lastName.trim()}`,
+              email: email.trim(),
+              mobilePhones: phone.replace(/\s+/g, "").trim(),
+              password: tempPassword.trim(),
+              status: true,
+              tenantId: targetTenant,
+            });
+
+            const newUserId = userRes?.data?.userId || userRes?.data?.id || userRes?.data?.UserId || userRes?.userId || userRes?.id;
+            const teacherRole = (roles || []).find((r) => {
+              const gName = (r.groupName || (r as any).name || "").toLowerCase();
+              return gName.includes("öğretmen") || gName.includes("ogretmen") || gName.includes("teacher");
+            });
+
+            if (newUserId && teacherRole?.id) {
+              await updateUserGroupsMutation.mutateAsync({
+                userId: newUserId,
+                groupIds: [teacherRole.id],
+              });
+            }
+          } catch (userErr: any) {
+            console.error("User creation error:", userErr);
+            toast.warning("Öğretmen oluşturuldu ancak kullanıcı hesabı eklenemedi (E-posta zaten kayıtlı olabilir).");
+          }
+        }
+
         toast.success("Yeni öğretmen kaydı başarıyla oluşturuldu.");
         setIsFormOpen(false);
         refetchTeachers();
         refetchPeople();
         refetchTeacherBranches();
+        usersQuery.refetch();
       }
     } catch (err: any) {
       toast.error(getApiErrorMessage(err, "İşlem sırasında bir hata oluştu."));
@@ -381,7 +562,8 @@ function TeachersContent() {
     createTeacherMutation.isPending ||
     updateTeacherMutation.isPending ||
     createPersonMutation.isPending ||
-    updatePersonMutation.isPending;
+    updatePersonMutation.isPending ||
+    changePasswordMutation.isPending;
 
   return (
     <div className="space-y-6 animate-fade-in p-2 md:p-6">
@@ -404,6 +586,7 @@ function TeachersContent() {
               refetchTeachers();
               refetchPeople();
               refetchTeacherBranches();
+              usersQuery.refetch();
             }}
             disabled={isLoadingTeachers || isLoadingPeople}
             className="h-10"
@@ -611,7 +794,7 @@ function TeachersContent() {
             </DialogTitle>
             <DialogDescription>
               {selectedTeacher
-                ? "Öğretmene ait profil fotoğrafı, kişi, şube ve işe başlama bilgilerini güncelleyin."
+                ? "Öğretmene ait profil fotoğrafı, kişi, şube ve şifre / kullanıcı bilgilerini güncelleyin."
                 : "Yeni öğretmen eklemek için profil, kişi ve şube bilgilerini doldurun."}
             </DialogDescription>
           </DialogHeader>
@@ -814,6 +997,275 @@ function TeachersContent() {
                 </select>
               </div>
             </div>
+
+            {/* Sistem Giriş Hesabı & Şifre İşlemleri */}
+            {!selectedTeacher ? (
+              // YENİ ÖĞRETMEN OLUŞTURMA MODU
+              <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <KeyRound className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <Label htmlFor="createUserSwitch" className="text-sm font-semibold text-foreground cursor-pointer">
+                        Sisteme Giriş Hesabı Oluştur
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Öğretmenin sisteme girip yoklama alabilmesi için otomatik kullanıcı hesabı açar.
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="createUserSwitch"
+                    checked={createUserAccount}
+                    onCheckedChange={setCreateUserAccount}
+                  />
+                </div>
+
+                {createUserAccount && (
+                  <div className="pt-2 border-t border-border/60 space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-foreground flex items-center justify-between">
+                        <span>Geçici Şifre</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">Format: Krs.XXXX!</span>
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            value={tempPassword}
+                            onChange={(e) => setTempPassword(e.target.value)}
+                            className="font-mono text-sm tracking-wider font-semibold h-9 bg-background"
+                            placeholder="Krs.8492!"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTempPassword(generateRandomPassword())}
+                          className="h-9 gap-1 text-xs"
+                          title="Yeni Rastgele Şifre Üret"
+                        >
+                          <Shuffle className="h-3.5 w-3.5" /> Yeni Üret
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* WhatsApp & Kopyala Butonları */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleCopyCredentials}
+                        className="flex-1 h-8 text-xs gap-1.5 font-medium"
+                      >
+                        {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copied ? "Kopyalandı" : "Bilgileri Kopyala"}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleShareWhatsApp}
+                        className="flex-1 h-8 text-xs gap-1.5 font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        WhatsApp ile Paylaş
+                      </Button>
+                    </div>
+
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">ℹ️</span>
+                      Öğretmen e-posta adresi ve bu geçici şifre ile giriş yapacaktır.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : matchedUser ? (
+              // ÖĞRETMEN DÜZENLEME MODU (MEVCUT KULLANICI HESABI VAR)
+              <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4 space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <KeyRound className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        Kullanıcı Giriş Hesabı
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] py-0">
+                          <Check className="h-3 w-3 mr-1" /> Aktif
+                        </Badge>
+                      </h5>
+                      <p className="text-[11px] text-muted-foreground">
+                        Bağlı E-posta: <span className="font-medium text-foreground">{matchedUser.email || email || "Belirtilmemiş"}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant={resetPasswordMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const nextMode = !resetPasswordMode;
+                      setResetPasswordMode(nextMode);
+                      if (nextMode) {
+                        setTempPassword(generateRandomPassword());
+                      }
+                    }}
+                    className="h-8 text-xs gap-1.5"
+                  >
+                    <RotateCcw className={`h-3.5 w-3.5 ${resetPasswordMode ? "text-primary-foreground" : "text-primary"}`} />
+                    {resetPasswordMode ? "Şifre Sıfırlamayı Kapat" : "Yeni Geçici Şifre Ata"}
+                  </Button>
+                </div>
+
+                {resetPasswordMode && (
+                  <div className="pt-1 space-y-3 animate-fade-in">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-foreground flex items-center justify-between">
+                        <span>Yeni Geçici Şifre</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">Format: Krs.XXXX!</span>
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            value={tempPassword}
+                            onChange={(e) => setTempPassword(e.target.value)}
+                            className="font-mono text-sm tracking-wider font-semibold h-9 bg-background"
+                            placeholder="Krs.8492!"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTempPassword(generateRandomPassword())}
+                          className="h-9 gap-1 text-xs"
+                          title="Yeni Rastgele Şifre Üret"
+                        >
+                          <Shuffle className="h-3.5 w-3.5" /> Yeni Üret
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* WhatsApp & Kopyala Butonları */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleCopyCredentials}
+                        className="flex-1 h-8 text-xs gap-1.5 font-medium"
+                      >
+                        {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copied ? "Kopyalandı" : "Bilgileri Kopyala"}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleShareWhatsApp}
+                        className="flex-1 h-8 text-xs gap-1.5 font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        WhatsApp ile Paylaş
+                      </Button>
+                    </div>
+
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                      <span className="text-primary font-bold">ℹ️</span>
+                      Güncelle butonuna bastığınızda öğretmenin sisteme giriş şifresi bu yeni geçici şifre ile güncellenecektir.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // ÖĞRETMEN DÜZENLEME MODU (HENÜZ KULLANICI HESABI YOK)
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.03] p-4 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                      <KeyRound className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <Label htmlFor="createUserSwitchEdit" className="text-sm font-semibold text-foreground cursor-pointer">
+                        Sisteme Giriş Hesabı Oluştur
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Bu öğretmen için henüz sistem kullanıcısı açılmamış. Şimdi otomatik hesap oluşturabilirsiniz.
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="createUserSwitchEdit"
+                    checked={createUserAccount}
+                    onCheckedChange={setCreateUserAccount}
+                  />
+                </div>
+
+                {createUserAccount && (
+                  <div className="pt-2 border-t border-border/60 space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-foreground flex items-center justify-between">
+                        <span>Geçici Şifre</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">Format: Krs.XXXX!</span>
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            value={tempPassword}
+                            onChange={(e) => setTempPassword(e.target.value)}
+                            className="font-mono text-sm tracking-wider font-semibold h-9 bg-background"
+                            placeholder="Krs.8492!"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTempPassword(generateRandomPassword())}
+                          className="h-9 gap-1 text-xs"
+                          title="Yeni Rastgele Şifre Üret"
+                        >
+                          <Shuffle className="h-3.5 w-3.5" /> Yeni Üret
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleCopyCredentials}
+                        className="flex-1 h-8 text-xs gap-1.5 font-medium"
+                      >
+                        {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copied ? "Kopyalandı" : "Bilgileri Kopyala"}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleShareWhatsApp}
+                        className="flex-1 h-8 text-xs gap-1.5 font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        WhatsApp ile Paylaş
+                      </Button>
+                    </div>
+
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">ℹ️</span>
+                      Güncelle butonuna bastığınızda öğretmen için kullanıcı hesabı oluşturulacak ve öğretmen rolü atanacaktır.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting || isUploadingPhoto}>

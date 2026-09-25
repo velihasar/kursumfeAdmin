@@ -56,16 +56,23 @@ export default function RegisterPage() {
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-96 h-96 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
         
         <div className="relative z-10 flex flex-col items-start">
-          <Logo className="w-48 text-primary-foreground items-start" />
-          <p className="mt-6 text-primary-foreground/80 font-medium">Premium E-Ticaret Yönetimi</p>
+          <Logo
+            size="lg"
+            className="items-center"
+            textClassName="text-white text-3xl font-extrabold tracking-wide"
+            iconClassName="bg-white text-primary shadow-md h-11 w-11"
+          />
+          <p className="mt-4 text-primary-foreground/90 font-medium text-sm tracking-wide">
+            Eğitim Kurumları Bilgi ve Yönetim Sistemi
+          </p>
         </div>
         
         <div className="relative z-10 max-w-md">
-          <h2 className="text-3xl leading-tight mb-4">
-            Ekibe katılın, kontrolü elinize alın.
+          <h2 className="text-3xl font-bold leading-tight mb-4">
+            Ekibe katılın, tüm eğitim süreçlerini yönetin.
           </h2>
-          <p className="text-primary-foreground/70">
-            Haqan Wear yönetim ekibinin bir parçası olmak için yönetici hesabı oluşturun ve sistemlere erişim sağlayın.
+          <p className="text-primary-foreground/80 leading-relaxed">
+            Kursum Bilgi ve Yönetim Sistemi ekibinin bir parçası olmak için yönetici hesabı oluşturun ve yetkili olduğunuz modüllere erişin.
           </p>
         </div>
       </div>
@@ -157,7 +164,7 @@ export default function RegisterPage() {
               </Link>
             </p>
             <p className="text-xs text-muted-foreground text-center lg:text-left">
-              Kayıt olarak, Haqan Wear Yönetim Paneli Hizmet Şartlarını kabul etmiş olursunuz.
+              Kayıt olarak, Kursum Bilgi ve Yönetim Sistemi Hizmet Şartlarını kabul etmiş olursunuz.
             </p>
           </div>
         </div>

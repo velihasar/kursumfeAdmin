@@ -396,7 +396,7 @@ function CoursesContent() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Kurs adı, kodu veya eğitmen ara..."
+                placeholder="Kurs ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 h-9 text-xs"
@@ -748,7 +748,7 @@ function CoursesContent() {
                 <Label htmlFor="c-name" className="text-xs">Kurs / Ders Adı *</Label>
                 <Input
                   id="c-name"
-                  placeholder="Örn: 8. Sınıf LGS Matematik"
+                  placeholder="Ders adını giriniz"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="h-9 text-xs"
@@ -759,7 +759,7 @@ function CoursesContent() {
                 <Label htmlFor="c-code" className="text-xs">Kurs Kodu</Label>
                 <Input
                   id="c-code"
-                  placeholder="Örn: LGS-MAT-A"
+                  placeholder="Kurs kodunu giriniz"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   className="h-9 text-xs font-mono"
@@ -773,7 +773,7 @@ function CoursesContent() {
               <Textarea
                 id="c-desc"
                 rows={2}
-                placeholder="Kurs müfredatı, seviyesi veya hedefleri hakkında kısa bilgi..."
+                placeholder="Kurs açıklamasını giriniz..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="text-xs resize-none"
@@ -848,7 +848,7 @@ function CoursesContent() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Örn: 2500"
+                  placeholder="0.00"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   className="h-9 text-xs font-semibold"
@@ -877,7 +877,7 @@ function CoursesContent() {
                   id="c-capacity"
                   type="number"
                   min="1"
-                  placeholder="Örn: 20"
+                  placeholder="Kontenjan giriniz"
                   value={capacity}
                   onChange={(e) => setCapacity(e.target.value)}
                   className="h-9 text-xs"
