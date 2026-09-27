@@ -45,7 +45,7 @@ export function GenericCrudDialog<T extends { id?: number }>({
   onSubmit,
 }: GenericCrudDialogProps<T>) {
   const [values, setValues] = useState<Record<string, string>>({});
-  const firstInputRef = useRef<HTMLInputElement>(null);
+  const firstInputRef = useRef<any>(null);
 
   useEffect(() => {
     if (open) {

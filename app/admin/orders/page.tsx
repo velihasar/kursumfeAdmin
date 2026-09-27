@@ -198,7 +198,9 @@ export default function OrdersPage() {
         return (
           <Select
             value={statusKey}
-            onValueChange={(val) => handleQuickStatusChange(order, val)}
+            onValueChange={(val) => {
+              if (val) handleQuickStatusChange(order, val);
+            }}
             disabled={updateMutation.isPending}
           >
             <SelectTrigger

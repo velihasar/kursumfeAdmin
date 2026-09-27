@@ -117,7 +117,7 @@ export function CouponDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="discountType">İndirim Türü</Label>
-              <Select value={discountType} onValueChange={setDiscountType}>
+              <Select value={discountType} onValueChange={(val) => setDiscountType(val || "FixedAmount")}>
                 <SelectTrigger id="discountType">
                   <SelectValue placeholder="İndirim Türü Seçin">
                     {discountType === "FixedAmount" ? "Sabit Tutar (₺)" : "Yüzdelik (%)"}

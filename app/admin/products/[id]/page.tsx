@@ -915,7 +915,7 @@ export default function ProductDetailPage() {
                             </Label>
                             <Select
                               value={String(newVariant.globalColorId || "")}
-                              onValueChange={(val) => setNewVariant({ ...newVariant, globalColorId: val })}
+                              onValueChange={(val) => setNewVariant({ ...newVariant, globalColorId: val || "" })}
                             >
                               <SelectTrigger className="h-9 text-xs">
                                 <SelectValue placeholder="Renk Seçin">
@@ -948,7 +948,7 @@ export default function ProductDetailPage() {
                             </Label>
                             <Select
                               value={String(newVariant.sizeId || "")}
-                              onValueChange={(val) => setNewVariant({ ...newVariant, sizeId: val })}
+                              onValueChange={(val) => setNewVariant({ ...newVariant, sizeId: val || "" })}
                             >
                               <SelectTrigger className="h-9 text-xs">
                                 <SelectValue placeholder="Beden Seçin">

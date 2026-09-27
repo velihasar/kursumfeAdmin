@@ -209,7 +209,7 @@ export function OrderDetailDialog({
             <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="status-select" className="text-xs font-medium">Sipariş Durumu</Label>
-                <Select value={orderStatus} onValueChange={setOrderStatus}>
+                <Select value={orderStatus} onValueChange={(val) => setOrderStatus(val || "Pending")}>
                   <SelectTrigger id="status-select" className="w-full bg-background">
                     <SelectValue placeholder="Durum Seçin">
                       {getStatusLabel(orderStatus)}
@@ -229,7 +229,7 @@ export function OrderDetailDialog({
                 <Label htmlFor="carrier-select" className="text-xs font-medium">
                   Kargo Firması {orderStatus === "Shipped" && <span className="text-destructive">*</span>}
                 </Label>
-                <Select value={shippingCarrierId} onValueChange={setShippingCarrierId}>
+                <Select value={shippingCarrierId} onValueChange={(val) => setShippingCarrierId(val || "")}>
                   <SelectTrigger id="carrier-select" className="w-full bg-background">
                     <SelectValue placeholder="Kargo Firması Seçin">
                       {getCarrierName(shippingCarrierId)}
@@ -369,7 +369,7 @@ export function OrderDetailDialog({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {items.map((item) => {
+                    {items.map((item: any) => {
                       const imgUrl = getMinioUrl(item.imageUrl);
                       const lineTotal = (item.unitPrice || 0) * (item.quantity || 1);
 

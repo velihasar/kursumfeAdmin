@@ -121,7 +121,7 @@ export function CartDetailDialog({
 
             {isLoading ? (
               <div className="flex items-center justify-center py-12 text-muted-foreground">
-                <Spinner size="md" className="mr-2" />
+                <Spinner size="default" className="mr-2" />
                 <span>Ürün bilgileri yükleniyor...</span>
               </div>
             ) : !items || items.length === 0 ? (
