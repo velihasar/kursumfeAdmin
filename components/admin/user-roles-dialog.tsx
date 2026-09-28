@@ -15,7 +15,10 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { User, useUserGroups, useUpdateUserGroups } from "@/hooks/useUsers";
 import { useRoles } from "@/hooks/useRoles";
-import { ShieldCheck, Search, CheckSquare, Square, Check, User as UserIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { checkIsSuperAdmin } from "@/lib/utils";
+import { ShieldCheck, Search, CheckSquare, Square, Check, User as UserIcon, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 interface UserRolesDialogProps {
   open: boolean;
@@ -30,7 +33,13 @@ export function UserRolesDialog({
   user,
   onSuccess,
 }: UserRolesDialogProps) {
+  const { data: session } = useSession();
+  const isSuperAdmin = checkIsSuperAdmin(session?.user);
+  const currentUserId = Number((session?.user as any)?.id || (session?.user as any)?.userId || 0);
+
   const userId = user?.userId ?? user?.UserId ?? user?.id;
+  const isSelf = Boolean(userId && currentUserId && userId === currentUserId);
+
   const { data: allRoles, isLoading: loadingRoles } = useRoles();
   const { data: assignedGroups, isLoading: loadingAssigned } = useUserGroups(userId);
   const updateMutation = useUpdateUserGroups();
@@ -67,20 +76,40 @@ export function UserRolesDialog({
     if (open) setSearchTerm("");
   }, [open]);
 
+  const isSuperAdminRole = (role: any) => {
+    const name = (role.groupName || role.GroupName || "").toLowerCase();
+    return name === "superadmin" || name === "super_admin";
+  };
+
   // Filtered roles
   const filteredRoles = useMemo(() => {
     if (!allRoles) return [];
-    if (!searchTerm.trim()) return allRoles;
+    let roles = allRoles;
+    // SuperAdmin dışındaki hiçkimse SuperAdmin rolünü göremez ve atayamaz
+    if (!isSuperAdmin) {
+      roles = roles.filter((r) => !isSuperAdminRole(r));
+    }
+    if (!searchTerm.trim()) return roles;
     const term = searchTerm.toLowerCase();
-    return allRoles.filter(
+    return roles.filter(
       (r) =>
         (r.groupName && r.groupName.toLowerCase().includes(term)) ||
         (r.GroupName && r.GroupName.toLowerCase().includes(term)) ||
         String(r.id).includes(term)
     );
-  }, [allRoles, searchTerm]);
+  }, [allRoles, searchTerm, isSuperAdmin]);
 
   const toggleRole = (id: number) => {
+    if (isSelf && !isSuperAdmin) {
+      toast.error("Kendi rollerinizi değiştiremezsiniz.");
+      return;
+    }
+    const roleObj = allRoles?.find((r) => r.id === id);
+    if (roleObj && isSuperAdminRole(roleObj) && !isSuperAdmin) {
+      toast.error("Süper Admin rolünü sadece bir Süper Admin atayabilir.");
+      return;
+    }
+
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -93,6 +122,7 @@ export function UserRolesDialog({
   };
 
   const handleSelectAllFiltered = () => {
+    if (isSelf && !isSuperAdmin) return;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       filteredRoles.forEach((r) => next.add(r.id));
@@ -101,6 +131,7 @@ export function UserRolesDialog({
   };
 
   const handleDeselectAllFiltered = () => {
+    if (isSelf && !isSuperAdmin) return;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       filteredRoles.forEach((r) => next.delete(r.id));
@@ -110,6 +141,10 @@ export function UserRolesDialog({
 
   const handleSave = () => {
     if (!userId) return;
+    if (isSelf && !isSuperAdmin) {
+      toast.error("Süper Admin dışındaki kullanıcılar kendi rollerini veya yetkilerini değiştiremezler.");
+      return;
+    }
     updateMutation.mutate(
       {
         userId,
@@ -140,6 +175,12 @@ export function UserRolesDialog({
           <DialogDescription>
             Bu kullanıcıya atanacak rolleri (grupları) seçin. Kullanıcı, seçilen tüm rollerin yetkilerine sahip olacaktır.
           </DialogDescription>
+          {isSelf && !isSuperAdmin && (
+            <div className="flex items-center gap-2 p-2.5 mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-medium">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Güvenlik kuralı gereği kendi kullanıcı yetkilerinizi veya rollerinizi değiştiremezsiniz.</span>
+            </div>
+          )}
         </DialogHeader>
 
         {/* Toolbar: Arama ve Hızlı Seçim */}
@@ -244,7 +285,7 @@ export function UserRolesDialog({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={updateMutation.isPending || isLoading}
+            disabled={updateMutation.isPending || isLoading || (isSelf && !isSuperAdmin)}
             className="gap-1.5"
           >
             {updateMutation.isPending ? (

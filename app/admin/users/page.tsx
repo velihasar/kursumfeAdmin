@@ -32,6 +32,7 @@ import { UserDialog } from "@/components/admin/user-dialog";
 import { UserRolesDialog } from "@/components/admin/user-roles-dialog";
 import { useUsers, User } from "@/hooks/useUsers";
 import { checkIsSuperAdmin } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function UsersPage() {
   const searchParams = useSearchParams();
@@ -62,6 +63,7 @@ export default function UsersPage() {
   const { data: session } = useSession();
   const userTenantId = (session?.user as any)?.tenantId || 0;
   const isSuperAdmin = checkIsSuperAdmin(session?.user);
+  const currentUserId = Number((session?.user as any)?.id || (session?.user as any)?.userId || 0);
 
   const { query, createMutation, updateMutation, deleteMutation } = useUsers(page, pageSize, debouncedSearch);
   const { data: rawData, isLoading, isFetching, refetch } = query;
@@ -87,6 +89,10 @@ export default function UsersPage() {
   };
 
   const handleDelete = (id: number) => {
+    if (id === currentUserId && !isSuperAdmin) {
+      toast.error("Süper Admin dışındaki kullanıcılar kendi hesaplarını silemezler.");
+      return;
+    }
     deleteMutation.mutate(id, {
       onSuccess: () => setToDelete(null),
     });
@@ -213,14 +219,18 @@ export default function UsersPage() {
       header: "İşlemler",
       cell: ({ row }) => {
         const user = row.original;
+        const rowUserId = user.userId ?? user.UserId ?? user.id;
+        const isSelfRow = Boolean(rowUserId && currentUserId && rowUserId === currentUserId);
+
         return (
           <div className="flex items-center gap-2 justify-end">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setRolesUser(user)}
-              className="gap-1.5 h-8 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
-              title="Kullanıcı Rollerini Yönet"
+              disabled={isSelfRow && !isSuperAdmin}
+              className="gap-1.5 h-8 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 border-primary/30 disabled:opacity-40"
+              title={isSelfRow && !isSuperAdmin ? "Kendi yetkilerinizi değiştiremezsiniz" : "Kullanıcı Rollerini Yönet"}
             >
               <ShieldCheck className="h-3.5 w-3.5" /> Rolleri Yönet
             </Button>
@@ -235,9 +245,16 @@ export default function UsersPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => setToDelete(user)}
-              title="Sil"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled={isSelfRow && !isSuperAdmin}
+              onClick={() => {
+                if (isSelfRow && !isSuperAdmin) {
+                  toast.error("Kendi hesabınızı silemezsiniz.");
+                  return;
+                }
+                setToDelete(user);
+              }}
+              title={isSelfRow && !isSuperAdmin ? "Kendi hesabınızı silemezsiniz" : "Sil"}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
