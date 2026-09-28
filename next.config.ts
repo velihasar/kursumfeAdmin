@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const rawBackendUrl = process.env.BACKEND_URL || "http://localhost:5000";
 const BACKEND_URL = rawBackendUrl.replace(/\/+$/, "");
+const rawMinioUrl = process.env.MINIO_INTERNAL_URL || process.env.NEXT_PUBLIC_MINIO_URL || "http://217.195.207.219:9000";
+const MINIO_URL = rawMinioUrl.replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
   // @ts-ignore
@@ -39,6 +41,14 @@ const nextConfig: NextConfig = {
       {
         source: "/api/:path((?!auth).*)",
         destination: `${BACKEND_URL}/api/:path*`,
+      },
+      {
+        source: "/kursum/:path*",
+        destination: `${MINIO_URL}/kursum/:path*`,
+      },
+      {
+        source: "/minio-storage/:path*",
+        destination: `${MINIO_URL}/:path*`,
       },
     ];
   },
