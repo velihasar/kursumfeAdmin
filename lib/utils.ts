@@ -11,13 +11,6 @@ export function getMinioUrl(path?: string | null): string {
     return path;
   }
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  
-  if (process.env.NEXT_PUBLIC_MINIO_URL) {
-    const cleanMinioUrl = process.env.NEXT_PUBLIC_MINIO_URL.replace(/\/+$/, "");
-    return `${cleanMinioUrl}${cleanPath}`;
-  }
-  
-  // Default to relative URL so Next.js rewrites proxy it securely over HTTPS
   return cleanPath;
 }
 
