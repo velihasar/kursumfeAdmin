@@ -28,7 +28,7 @@ export interface StudentGetByIdDto {
 export interface CreateStudentCommand {
   tenantId?: number;
   personId: number;
-  studentNumber: string;
+  studentNumber?: string;
   enrollmentDate: string;
 }
 
@@ -36,7 +36,7 @@ export interface UpdateStudentCommand {
   id: number;
   tenantId?: number;
   personId: number;
-  studentNumber: string;
+  studentNumber?: string;
   enrollmentDate: string;
   isActive: boolean;
 }

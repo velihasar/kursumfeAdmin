@@ -152,13 +152,6 @@ function StudentsContent() {
     }
   }, [searchParams]);
 
-  // Auto-generate student number helper
-  const generateStudentNumber = () => {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const year = new Date().getFullYear();
-    setStudentNumber(`OGR-${year}-${randomNum}`);
-  };
-
   const handleOpenCreate = () => {
     setSelectedStudent(null);
     setPersonSelectionMode("new_person");
@@ -171,7 +164,7 @@ function StudentsContent() {
     setDateOfBirth("");
     setPhotoUrl("");
     setSelectedBranchId(undefined);
-    generateStudentNumber();
+    setStudentNumber("");
     setEnrollmentDate(new Date().toISOString().split("T")[0]);
     setIsFormOpen(true);
   };
@@ -217,11 +210,6 @@ function StudentsContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!studentNumber.trim()) {
-      toast.error("Lütfen öğrenci numarasını giriniz.");
-      return;
-    }
-
     if (isSuperAdmin && !selectedTenantId) {
       toast.error("SuperAdmin olarak işlem yapmaktasınız. Lütfen bir kurum/okul seçiniz.");
       return;
@@ -251,7 +239,7 @@ function StudentsContent() {
           id: selectedStudent.id,
           tenantId: isSuperAdmin ? selectedTenantId : undefined,
           personId: targetPersonId,
-          studentNumber: studentNumber.trim(),
+          studentNumber: studentNumber.trim() || undefined,
           enrollmentDate: new Date(enrollmentDate).toISOString(),
           isActive: true,
         });
@@ -329,14 +317,14 @@ function StudentsContent() {
         const studentRes = await createStudentMutation.mutateAsync({
           tenantId: isSuperAdmin ? selectedTenantId : undefined,
           personId: targetPersonId,
-          studentNumber: studentNumber.trim(),
+          studentNumber: studentNumber.trim() || undefined,
           enrollmentDate: new Date(enrollmentDate).toISOString(),
         });
 
         let createdStudentId = (studentRes as any)?.data?.id || (studentRes as any)?.Data?.Id || (studentRes as any)?.id;
         if (!createdStudentId) {
           const updatedStudents = await refetchStudents();
-          const newSt = updatedStudents.data?.find((s) => s.studentNumber === studentNumber.trim());
+          const newSt = updatedStudents.data?.find((s) => s.personId === targetPersonId);
           if (newSt) createdStudentId = newSt.id;
         }
 
@@ -575,8 +563,8 @@ function StudentsContent() {
                 <TableHeader>
                   <TableRow className="bg-muted/30">
                     <TableHead className="w-12">Foto</TableHead>
-                    <TableHead>Öğrenci No</TableHead>
-                    <TableHead>Ad Soyad</TableHead>
+                    <TableHead>Öğrenci</TableHead>
+                    <TableHead>Veli Giriş Kodu</TableHead>
                     {isSuperAdmin && <TableHead>Kurum / Okul</TableHead>}
                     <TableHead>Şube</TableHead>
                     <TableHead>İletişim</TableHead>
@@ -605,29 +593,6 @@ function StudentsContent() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1 items-start">
-                            <Badge variant="outline" className="font-mono bg-primary/5 text-primary border-primary/20 px-2 py-0.5 text-xs">
-                              {st.studentNumber || "N/A"}
-                            </Badge>
-                            {st.parentAccessCode && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(st.parentAccessCode!);
-                                  toast.success(`Mobil Veli Kodu kopyalandı: ${st.parentAccessCode}`);
-                                }}
-                                title="Mobil Veli Erişim Kodunu Kopyalamak İçin Tıklayın"
-                                className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded px-1.5 py-0.5 transition-colors cursor-pointer group"
-                              >
-                                <KeyRound className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
-                                <span>{st.parentAccessCode}</span>
-                                <Copy className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100" />
-                              </button>
-                            )}
-                          </div>
-                        </TableCell>
                         <TableCell className="font-medium">
                           {st.person ? (
                             <div className="flex flex-col">
@@ -635,7 +600,7 @@ function StudentsContent() {
                                 {st.person.firstName} {st.person.lastName}
                               </span>
                               {st.person.dateOfBirth && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                                   <Calendar className="h-3 w-3" />
                                   {new Date(st.person.dateOfBirth).toLocaleDateString("tr-TR")}
                                 </span>
@@ -643,6 +608,26 @@ function StudentsContent() {
                             </div>
                           ) : (
                             <span className="text-muted-foreground italic text-xs">Kişi ID #{st.personId}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {st.parentAccessCode ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(st.parentAccessCode!);
+                                toast.success(`Mobil Veli Kodu kopyalandı: ${st.parentAccessCode}`);
+                              }}
+                              title="Mobil Veli Erişim Kodunu Kopyalamak İçin Tıklayın"
+                              className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded px-2 py-1 transition-colors cursor-pointer group"
+                            >
+                              <KeyRound className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                              <span>{st.parentAccessCode}</span>
+                              <Copy className="w-3 h-3 opacity-60 group-hover:opacity-100" />
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">-</span>
                           )}
                         </TableCell>
                         {isSuperAdmin && (
@@ -976,32 +961,7 @@ function StudentsContent() {
               </h4>
 
               <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="studentNumber">
-                    Öğrenci Numarası <span className="text-destructive">*</span>
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={generateStudentNumber}
-                    className="h-7 text-xs text-primary hover:text-primary/90"
-                  >
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Otomatik Üret
-                  </Button>
-                </div>
-                <Input
-                  id="studentNumber"
-                  placeholder="OGR-2026-1001"
-                  value={studentNumber}
-                  onChange={(e) => setStudentNumber(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="enrollmentDate">Okul Kayıt Tarihi *</Label>
+                <Label htmlFor="enrollmentDate">Kayıt Tarihi *</Label>
                 <Input
                   id="enrollmentDate"
                   type="date"
