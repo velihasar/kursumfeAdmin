@@ -1,9 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getSession, signOut } from "next-auth/react";
 
-// Backend base URL — network adresine göre
+// Backend base URL — NEXT_PUBLIC_BACKEND_URL varsa onu kullanır, yoksa tarayıcıda boş (aynı domain / rewrite), sunucuda BACKEND_URL kullanır
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  (typeof window !== "undefined" ? "" : process.env.BACKEND_URL || "http://localhost:5000");
 
 export const axiosInstance = axios.create({
   baseURL: BACKEND_URL,
