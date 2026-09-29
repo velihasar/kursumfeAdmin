@@ -161,6 +161,8 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
+        token.id = user.id;
+        token.userId = user.id;
         token.name = user.name;
         token.fullName = user.fullName;
         token.role = user.role;
@@ -175,6 +177,8 @@ export const authOptions = {
     },
     async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
+        (session.user as any).id = token.id || token.sub;
+        (session.user as any).userId = token.userId || token.id || token.sub;
         (session.user as any).name = token.name || token.fullName;
         (session.user as any).fullName = token.fullName || token.name;
         (session.user as any).role = token.role;

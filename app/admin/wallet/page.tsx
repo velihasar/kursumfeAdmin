@@ -732,9 +732,14 @@ function WalletManagementContent() {
                           <TableCell className="text-xs font-medium">
                             {tx.category || "-"}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
-                            {tx.description || "-"}
-                            {tx.receiptNo && ` (Fiş: ${tx.receiptNo})`}
+                          <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate">
+                            <span>{tx.description || "-"}</span>
+                            {isDeposit && (
+                              <span className="ml-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                                ({tx.paymentTypeName || (tx.paymentType === 1 ? "Nakit" : tx.paymentType === 2 ? "Kredi Kartı" : tx.paymentType === 3 ? "Havale/EFT" : "Diğer")})
+                              </span>
+                            )}
+                            {tx.receiptNo && <span className="ml-1 text-[11px] opacity-80">• Fiş: {tx.receiptNo}</span>}
                           </TableCell>
                           <TableCell className="text-right">
                             <span

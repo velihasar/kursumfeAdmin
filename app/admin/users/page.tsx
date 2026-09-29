@@ -64,6 +64,7 @@ export default function UsersPage() {
   const userTenantId = (session?.user as any)?.tenantId || 0;
   const isSuperAdmin = checkIsSuperAdmin(session?.user);
   const currentUserId = Number((session?.user as any)?.id || (session?.user as any)?.userId || 0);
+  const currentUserEmail = (session?.user as any)?.email?.toLowerCase();
 
   const { query, createMutation, updateMutation, deleteMutation } = useUsers(page, pageSize, debouncedSearch);
   const { data: rawData, isLoading, isFetching, refetch } = query;
@@ -84,13 +85,19 @@ export default function UsersPage() {
   };
 
   const handleEdit = (user: User) => {
+    const uid = Number(user.userId ?? user.UserId ?? user.id ?? 0);
+    const email = (user.email || user.Email || "").toLowerCase();
+    if ((currentUserId > 0 && uid === currentUserId) || (currentUserEmail && email === currentUserEmail)) {
+      toast.error("Kendi hesabınızı bu listeden düzenleyemezsiniz. Profil sayfasından düzenleyebilirsiniz.");
+      return;
+    }
     setSelectedUser(user);
     setDialogOpen(true);
   };
 
   const handleDelete = (id: number) => {
-    if (id === currentUserId && !isSuperAdmin) {
-      toast.error("Süper Admin dışındaki kullanıcılar kendi hesaplarını silemezler.");
+    if (id === currentUserId) {
+      toast.error("Kendi hesabınızı silemezsiniz.");
       return;
     }
     deleteMutation.mutate(id, {
@@ -118,15 +125,33 @@ export default function UsersPage() {
       header: "Ad Soyad",
       accessorFn: (row) => row.fullName || row.FullName || "",
       cell: ({ row }) => {
-        const name = row.original.fullName || row.original.FullName || "İsimsiz Kullanıcı";
-        const uid = row.original.userId ?? row.original.UserId ?? row.original.id;
+        const user = row.original;
+        const name = user.fullName || user.FullName || "İsimsiz Kullanıcı";
+        const uid = user.userId ?? user.UserId ?? user.id;
+        const rowUserId = Number(uid || 0);
+        const rowEmail = (user.email || user.Email || "").toLowerCase();
+        const isSelfRow = Boolean(
+          (currentUserId > 0 && rowUserId === currentUserId) ||
+          (currentUserEmail && rowEmail && rowEmail === currentUserEmail)
+        );
+
         return (
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
               <UserIcon className="h-4 w-4" />
             </div>
             <div>
-              <div className="font-semibold text-sm">{name}</div>
+              <div className="font-semibold text-sm flex items-center gap-1.5">
+                <span>{name}</span>
+                {isSelfRow && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-semibold px-1.5 py-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
+                  >
+                    Siz
+                  </Badge>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground">ID: #{uid}</div>
             </div>
           </div>
@@ -219,8 +244,23 @@ export default function UsersPage() {
       header: "İşlemler",
       cell: ({ row }) => {
         const user = row.original;
-        const rowUserId = user.userId ?? user.UserId ?? user.id;
-        const isSelfRow = Boolean(rowUserId && currentUserId && rowUserId === currentUserId);
+        const uid = user.userId ?? user.UserId ?? user.id;
+        const rowUserId = Number(uid || 0);
+        const rowEmail = (user.email || user.Email || "").toLowerCase();
+        const isSelfRow = Boolean(
+          (currentUserId > 0 && rowUserId === currentUserId) ||
+          (currentUserEmail && rowEmail && rowEmail === currentUserEmail)
+        );
+
+        if (isSelfRow) {
+          return (
+            <div className="flex items-center justify-end">
+              <span className="text-xs text-muted-foreground font-medium italic px-2.5 py-1 rounded-md bg-muted/50 border">
+                Kendi Hesabınız
+              </span>
+            </div>
+          );
+        }
 
         return (
           <div className="flex items-center gap-2 justify-end">
@@ -228,9 +268,8 @@ export default function UsersPage() {
               variant="outline"
               size="sm"
               onClick={() => setRolesUser(user)}
-              disabled={isSelfRow && !isSuperAdmin}
-              className="gap-1.5 h-8 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 border-primary/30 disabled:opacity-40"
-              title={isSelfRow && !isSuperAdmin ? "Kendi yetkilerinizi değiştiremezsiniz" : "Kullanıcı Rollerini Yönet"}
+              className="gap-1.5 h-8 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
+              title="Kullanıcı Rollerini Yönet"
             >
               <ShieldCheck className="h-3.5 w-3.5" /> Rolleri Yönet
             </Button>
@@ -245,16 +284,9 @@ export default function UsersPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled={isSelfRow && !isSuperAdmin}
-              onClick={() => {
-                if (isSelfRow && !isSuperAdmin) {
-                  toast.error("Kendi hesabınızı silemezsiniz.");
-                  return;
-                }
-                setToDelete(user);
-              }}
-              title={isSelfRow && !isSuperAdmin ? "Kendi hesabınızı silemezsiniz" : "Sil"}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => setToDelete(user)}
+              title="Sil"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

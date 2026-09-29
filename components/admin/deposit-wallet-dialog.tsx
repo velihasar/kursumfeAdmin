@@ -33,6 +33,13 @@ interface DepositWalletDialogProps {
 
 const QUICK_AMOUNTS = [50, 100, 200, 500, 1000];
 
+const PAYMENT_METHODS = [
+  { value: "1", label: "Nakit", icon: "💵" },
+  { value: "2", label: "Kredi Kartı", icon: "💳" },
+  { value: "3", label: "Havale / EFT", icon: "🏦" },
+  { value: "4", label: "Diğer", icon: "✨" },
+];
+
 export function DepositWalletDialog({
   open,
   onOpenChange,
@@ -48,6 +55,11 @@ export function DepositWalletDialog({
   const { data: students = [], isLoading: isLoadingStudents } = useStudents();
   const depositMutation = useDepositStudentWallet();
 
+  const studentSelectItems = students.map((s) => ({
+    value: String(s.id),
+    label: `${s.firstName} ${s.lastName} ${s.studentNumber ? `(${s.studentNumber})` : ""}`.trim(),
+  }));
+
   useEffect(() => {
     if (open) {
       if (preSelectedStudentId) {
@@ -58,7 +70,7 @@ export function DepositWalletDialog({
       setAmount("");
       setPaymentType("1");
       setDescription("");
-      setReceiptNo("");
+      setReceiptNo(`MAK-${Math.floor(100000 + Math.random() * 900000)}`);
     }
   }, [open, preSelectedStudentId]);
 
@@ -101,7 +113,7 @@ export function DepositWalletDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-2 text-emerald-600">
             <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
@@ -129,12 +141,20 @@ export function DepositWalletDialog({
               </div>
             ) : (
               <Select
+                items={studentSelectItems}
                 value={studentId}
                 onValueChange={(val) => setStudentId(val ?? "")}
                 disabled={isLoadingStudents}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={isLoadingStudents ? "Yükleniyor..." : "Öğrenci Seçiniz"} />
+                  <SelectValue placeholder={isLoadingStudents ? "Yükleniyor..." : "Öğrenci Seçiniz"}>
+                    {studentId
+                      ? (() => {
+                          const st = students.find((s) => String(s.id) === studentId);
+                          return st ? `${st.firstName} ${st.lastName} ${st.studentNumber ? `(${st.studentNumber})` : ""}` : undefined;
+                        })()
+                      : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
                   {students.map((s) => (
@@ -157,7 +177,7 @@ export function DepositWalletDialog({
                   type="button"
                   variant={amount === String(amt) ? "default" : "outline"}
                   size="sm"
-                  className={amount === String(amt) ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
+                  className={amount === String(amt) ? "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold" : ""}
                   onClick={() => setAmount(String(amt))}
                 >
                   ₺{amt}
@@ -187,49 +207,67 @@ export function DepositWalletDialog({
             </div>
           </div>
 
-          {/* Ödeme Türü */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="paymentType" className="font-semibold text-sm">
-                Ödeme Yöntemi
-              </Label>
-              <Select value={paymentType} onValueChange={(val) => setPaymentType(val ?? "1")}>
-                <SelectTrigger id="paymentType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">💵 Nakit</SelectItem>
-                  <SelectItem value="2">💳 Kredi / Banka Kartı</SelectItem>
-                  <SelectItem value="3">🏦 Havale / EFT</SelectItem>
-                  <SelectItem value="4">✨ Diğer</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Ödeme Yöntemi */}
+          <div className="space-y-1.5">
+            <Label className="font-semibold text-sm">
+              Ödeme Yöntemi <span className="text-red-500">*</span>
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {PAYMENT_METHODS.map((pm) => {
+                const isSelected = paymentType === pm.value;
+                return (
+                  <button
+                    key={pm.value}
+                    type="button"
+                    onClick={() => setPaymentType(pm.value)}
+                    className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 font-semibold shadow-xs"
+                        : "border-input bg-card hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span>{pm.icon}</span>
+                    <span>{pm.label}</span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
+          {/* Makbuz / Fiş No & Açıklama */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="receiptNo" className="font-semibold text-sm">
-                Makbuz / Fiş No
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="receiptNo" className="font-semibold text-sm">
+                  Makbuz / Fiş No
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setReceiptNo(`MAK-${Math.floor(100000 + Math.random() * 900000)}`)}
+                  className="text-[11px] text-emerald-600 hover:text-emerald-700 hover:underline font-medium cursor-pointer"
+                >
+                  Otomatik Üret
+                </button>
+              </div>
               <Input
                 id="receiptNo"
-                placeholder="Örn: MK-1024"
+                placeholder="Örn: MAK-1024"
                 value={receiptNo}
                 onChange={(e) => setReceiptNo(e.target.value)}
               />
             </div>
-          </div>
 
-          {/* Açıklama */}
-          <div className="space-y-1.5">
-            <Label htmlFor="description" className="font-semibold text-sm">
-              Açıklama / Not
-            </Label>
-            <Input
-              id="description"
-              placeholder="Örn: Veli elden teslim etti (Su/Dolap bakiye)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="font-semibold text-sm">
+                Açıklama / Not
+              </Label>
+              <Input
+                id="description"
+                placeholder="Örn: Veli elden teslim etti"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
           </div>
 
           <DialogFooter className="pt-2">

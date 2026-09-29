@@ -182,7 +182,9 @@ export function WalletDetailDialog({
                                 })
                               : "-"}
                           </span>
-                          {tx.paymentTypeName && <span>• {tx.paymentTypeName}</span>}
+                          {(tx.paymentTypeName || (tx.paymentType ? (tx.paymentType === 1 ? "Nakit" : tx.paymentType === 2 ? "Kredi Kartı" : tx.paymentType === 3 ? "Havale/EFT" : "Diğer") : null)) && (
+                            <span>• {tx.paymentTypeName || (tx.paymentType === 1 ? "Nakit" : tx.paymentType === 2 ? "Kredi Kartı" : tx.paymentType === 3 ? "Havale/EFT" : "Diğer")}</span>
+                          )}
                           {tx.receiptNo && <span>• Fiş: {tx.receiptNo}</span>}
                         </div>
                       </div>

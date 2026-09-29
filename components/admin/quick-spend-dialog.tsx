@@ -197,12 +197,23 @@ export function QuickSpendDialog({
               ) : (
                 <div className="space-y-2">
                   <Select
+                    items={students.map((s) => ({
+                      value: String(s.id),
+                      label: `${s.firstName} ${s.lastName} ${s.studentNumber ? `(${s.studentNumber})` : ""}`.trim(),
+                    }))}
                     value={studentId}
                     onValueChange={(val) => setStudentId(val ?? "")}
                     disabled={isLoadingStudents}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={isLoadingStudents ? "Yükleniyor..." : "Öğrenci Seçiniz"} />
+                      <SelectValue placeholder={isLoadingStudents ? "Yükleniyor..." : "Öğrenci Seçiniz"}>
+                        {studentId
+                          ? (() => {
+                              const st = students.find((s) => String(s.id) === studentId);
+                              return st ? `${st.firstName} ${st.lastName} ${st.studentNumber ? `(${st.studentNumber})` : ""}` : undefined;
+                            })()
+                          : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
                       {students.map((s) => (
@@ -300,7 +311,7 @@ export function QuickSpendDialog({
                 </Label>
                 <Select value={category} onValueChange={(val) => handleCustomCategorySelect(val ?? "Kantin & Atıştırmalık")}>
                   <SelectTrigger id="category">
-                    <SelectValue />
+                    <SelectValue>{category}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Su & İçecek">💧 Su & İçecek</SelectItem>
