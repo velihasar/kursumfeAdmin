@@ -28,14 +28,19 @@ import {
   EyeOff,
   Save,
   KeyRound,
+  Building2,
 } from "lucide-react";
 import { useUsers, useUserDetail, useChangePassword } from "@/hooks/useUsers";
+import { useTenant } from "@/hooks/useTenants";
+import { getMinioUrl } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
   const sessionUser = session?.user as any;
   const userId = sessionUser?.id ? Number(sessionUser.id) : undefined;
   const role = sessionUser?.role || "SUPER_ADMIN";
+  const userTenantId = Number(sessionUser?.tenantId || 0);
+  const { data: tenant } = useTenant(userTenantId);
 
   // Profil Bilgileri Form State
   const [fullName, setFullName] = useState("");
@@ -178,6 +183,16 @@ export default function ProfilePage() {
                 <ShieldCheck className="h-3.5 w-3.5 mr-1" />
                 {role}
               </Badge>
+              {tenant?.name && (
+                <Badge variant="outline" className="text-xs font-medium gap-1.5 bg-primary/5 text-primary border-primary/20">
+                  {tenant.logoUrl ? (
+                    <img src={getMinioUrl(tenant.logoUrl)} alt={tenant.name} className="h-3.5 w-3.5 rounded object-contain shrink-0" />
+                  ) : (
+                    <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span>{tenant.name}</span>
+                </Badge>
+              )}
             </div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-muted-foreground pt-1">
               <div className="flex items-center gap-1.5">

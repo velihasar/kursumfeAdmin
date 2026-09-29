@@ -16,7 +16,10 @@ import {
   LogOut,
   ChevronDown,
   ShieldCheck,
+  Building2,
 } from "lucide-react";
+import { useTenant } from "@/hooks/useTenants";
+import { checkIsSuperAdmin, getMinioUrl } from "@/lib/utils";
 
 export function Header() {
   const { data: session } = useSession();
@@ -24,6 +27,10 @@ export function Header() {
   const role = user?.userRole || user?.role || "Kullanıcı";
   const fullName = user?.name || user?.fullName || "Yönetici";
   const email = user?.email || "admin@kursum.com";
+  const userTenantId = Number(user?.tenantId || 0);
+  const isSuperAdmin = checkIsSuperAdmin(user);
+
+  const { data: tenant } = useTenant(userTenantId);
 
   // Initials for avatar
   const initials = fullName
@@ -35,8 +42,34 @@ export function Header() {
 
   return (
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6 sticky top-0 z-30 shadow-2xs">
-      {/* Sol Alan */}
-      <div className="flex items-center gap-3"></div>
+      {/* Sol Alan: Kurum Bilgisi veya Super Admin Rozeti */}
+      <div className="flex items-center gap-3">
+        {isSuperAdmin ? (
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/20 text-xs font-semibold text-primary">
+            <span>👑 Süper Admin Portalı</span>
+          </div>
+        ) : userTenantId > 0 && tenant ? (
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border/80 shadow-2xs">
+            {tenant.logoUrl ? (
+              <img
+                src={getMinioUrl(tenant.logoUrl)}
+                alt={tenant.name}
+                className="h-5 w-5 rounded-md object-contain shrink-0"
+              />
+            ) : (
+              <Building2 className="h-4 w-4 text-primary shrink-0" />
+            )}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-foreground leading-tight truncate max-w-[180px] sm:max-w-[320px]">
+                {tenant.name}
+              </span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium bg-background text-muted-foreground">
+                Kurum
+              </Badge>
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       {/* Sağ: Zengin Kullanıcı & Çıkış Kartı */}
       <div className="flex items-center gap-3">
@@ -66,7 +99,7 @@ export function Header() {
                 </Badge>
               </div>
               <div className="text-[10px] text-muted-foreground leading-tight truncate max-w-[140px]">
-                {email}
+                {tenant?.name || email}
               </div>
             </div>
 
@@ -78,8 +111,20 @@ export function Header() {
             <div className="p-2 border-b mb-1">
               <p className="text-xs font-semibold text-foreground">{fullName}</p>
               <p className="text-[11px] text-muted-foreground truncate">{email}</p>
+              
+              {tenant?.name && (
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-primary font-medium truncate">
+                  {tenant.logoUrl ? (
+                    <img src={getMinioUrl(tenant.logoUrl)} alt={tenant.name} className="h-3.5 w-3.5 rounded object-contain shrink-0" />
+                  ) : (
+                    <Building2 className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span className="truncate">{tenant.name}</span>
+                </div>
+              )}
+
               <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <ShieldCheck className="h-3 w-3" />
+                <ShieldCheck className="h-3 w-3 shrink-0" />
                 <span>Yetki: {role}</span>
               </div>
             </div>
