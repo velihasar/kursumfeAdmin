@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn, checkIsSuperAdmin, checkIsOnlyTeacher, getMinioUrl } from "@/lib/utils";
+import { cn, checkIsSuperAdmin, checkIsOnlyTeacher } from "@/lib/utils";
 import {
   LayoutDashboard,
   Building2,
@@ -26,7 +26,6 @@ import {
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
-import { useTenant } from "@/hooks/useTenants";
 
 interface NavItem {
   title: string;
@@ -47,8 +46,6 @@ export function Sidebar() {
   const isSuperAdmin = checkIsSuperAdmin(session?.user);
   const isOnlyTeacher = checkIsOnlyTeacher(session?.user);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const userTenantId = Number((session?.user as any)?.tenantId || 0);
-  const { data: tenant } = useTenant(userTenantId);
 
   const navItems: NavItem[] = [
     {
@@ -175,51 +172,11 @@ export function Sidebar() {
         isCollapsed ? "w-20" : "w-64"
       )}
     >
-      <div className={cn("flex h-16 items-center border-b border-border", isCollapsed ? "justify-center px-0" : "justify-between px-5")}>
-        {!isCollapsed ? (
-          userTenantId > 0 && tenant && !isSuperAdmin ? (
-            <Link href={logoHref} className="flex items-center gap-2.5 min-w-0 max-w-[170px] cursor-pointer group">
-              {tenant.logoUrl ? (
-                <img
-                  src={getMinioUrl(tenant.logoUrl)}
-                  alt={tenant.name}
-                  className="h-9 w-9 rounded-xl object-contain shrink-0 bg-muted/40 p-1 border border-border shadow-2xs group-hover:scale-105 transition-transform"
-                />
-              ) : (
-                <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                  {tenant.name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-foreground leading-tight truncate group-hover:text-primary transition-colors" title={tenant.name}>
-                  {tenant.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground font-medium truncate">
-                  {tenant.code || "Kurum Paneli"}
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <Link href={logoHref} className="shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95">
-              <Logo className="w-32 text-primary" />
-            </Link>
-          )
-        ) : (
-          userTenantId > 0 && tenant && !isSuperAdmin ? (
-            <Link href={logoHref} className="cursor-pointer" title={tenant.name}>
-              {tenant.logoUrl ? (
-                <img
-                  src={getMinioUrl(tenant.logoUrl)}
-                  alt={tenant.name}
-                  className="h-8 w-8 rounded-lg object-contain bg-muted/40 p-0.5 border"
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">
-                  {tenant.name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-            </Link>
-          ) : null
+      <div className={cn("flex h-16 items-center border-b border-border", isCollapsed ? "justify-center px-0" : "justify-between px-6")}>
+        {!isCollapsed && (
+          <Link href={logoHref} className="shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95">
+            <Logo className="w-32 text-primary" />
+          </Link>
         )}
         <Button 
           variant="ghost" 

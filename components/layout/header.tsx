@@ -99,7 +99,7 @@ export function Header() {
                 </Badge>
               </div>
               <div className="text-[10px] text-muted-foreground leading-tight truncate max-w-[140px]">
-                {tenant?.name || email}
+                {email}
               </div>
             </div>
 
@@ -111,17 +111,6 @@ export function Header() {
             <div className="p-2 border-b mb-1">
               <p className="text-xs font-semibold text-foreground">{fullName}</p>
               <p className="text-[11px] text-muted-foreground truncate">{email}</p>
-              
-              {tenant?.name && (
-                <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-primary font-medium truncate">
-                  {tenant.logoUrl ? (
-                    <img src={getMinioUrl(tenant.logoUrl)} alt={tenant.name} className="h-3.5 w-3.5 rounded object-contain shrink-0" />
-                  ) : (
-                    <Building2 className="h-3.5 w-3.5 shrink-0" />
-                  )}
-                  <span className="truncate">{tenant.name}</span>
-                </div>
-              )}
 
               <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
                 <ShieldCheck className="h-3 w-3 shrink-0" />
