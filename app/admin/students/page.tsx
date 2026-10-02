@@ -8,9 +8,10 @@ import { usePeople, useCreatePerson, useUpdatePerson, useUploadPersonPhoto } fro
 import { useTenants } from "@/hooks/useTenants";
 import { useBranches } from "@/hooks/useBranches";
 import { useStudentBranches, useCreateStudentBranch, useDeleteStudentBranch } from "@/hooks/useStudentBranches";
-import { useParents } from "@/hooks/useParents";
-import { useStudentParents } from "@/hooks/useStudentParents";
+import { useParents, useCreateParent } from "@/hooks/useParents";
+import { useStudentParents, useCreateStudentParent } from "@/hooks/useStudentParents";
 import { StudentParentsDialog } from "@/components/admin/student-parents-dialog";
+import { StudentExcelImportDialog } from "@/components/admin/student-excel-import-dialog";
 import { StudentGetAllDto } from "@/types/student.types";
 import { PersonGetAllDto } from "@/types/person.types";
 import {
@@ -73,6 +74,7 @@ import {
   Copy,
   KeyRound,
   Smartphone,
+  FileSpreadsheet,
 } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -101,8 +103,8 @@ function StudentsContent() {
   const { data: tenants } = useTenants();
   const { data: branches } = useBranches();
   const { data: studentBranches, refetch: refetchStudentBranches } = useStudentBranches();
-  const { data: parents } = useParents();
-  const { data: studentParents } = useStudentParents();
+  const { data: parents, refetch: refetchParents } = useParents();
+  const { data: studentParents, refetch: refetchStudentParents } = useStudentParents();
 
   // Mutations
   const createStudentMutation = useCreateStudent();
@@ -113,6 +115,8 @@ function StudentsContent() {
   const uploadPhotoMutation = useUploadPersonPhoto();
   const createStudentBranchMutation = useCreateStudentBranch();
   const deleteStudentBranchMutation = useDeleteStudentBranch();
+  const createParentMutation = useCreateParent();
+  const createStudentParentMutation = useCreateStudentParent();
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
@@ -120,6 +124,7 @@ function StudentsContent() {
 
   // Dialog States
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentGetAllDto | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<StudentGetAllDto | null>(null);
   const [selectedStudentForParents, setSelectedStudentForParents] = useState<StudentGetAllDto | null>(null);
@@ -145,6 +150,17 @@ function StudentsContent() {
   const [enrollmentDate, setEnrollmentDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | undefined>(undefined);
 
+  // Parent Form Fields (For Initial Registration)
+  const [includeParent, setIncludeParent] = useState(true);
+  const [parentMode, setParentMode] = useState<"new_parent" | "existing_parent">("new_parent");
+  const [parentFirstName, setParentFirstName] = useState("");
+  const [parentLastName, setParentLastName] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [parentRelationship, setParentRelationship] = useState("Anne");
+  const [parentIsPrimary, setParentIsPrimary] = useState(true);
+  const [selectedParentPersonId, setSelectedParentPersonId] = useState<number | undefined>(undefined);
+
   // Open modal if ?action=new is in query params
   useEffect(() => {
     if (searchParams.get("action") === "new") {
@@ -166,6 +182,16 @@ function StudentsContent() {
     setSelectedBranchId(undefined);
     setStudentNumber("");
     setEnrollmentDate(new Date().toISOString().split("T")[0]);
+    // Reset Parent Form
+    setIncludeParent(true);
+    setParentMode("new_parent");
+    setParentFirstName("");
+    setParentLastName("");
+    setParentPhone("");
+    setParentEmail("");
+    setParentRelationship("Anne");
+    setParentIsPrimary(true);
+    setSelectedParentPersonId(undefined);
     setIsFormOpen(true);
   };
 
@@ -338,11 +364,82 @@ function StudentsContent() {
           });
         }
 
+        // Step 4: Create & Link Parent if includeParent is selected
+        if (createdStudentId && includeParent) {
+          const targetTenant = isSuperAdmin ? selectedTenantId : userTenantId;
+
+          if (parentMode === "new_parent") {
+            if (parentFirstName.trim() && parentLastName.trim()) {
+              try {
+                const parentPersonRes: any = await createPersonMutation.mutateAsync({
+                  tenantId: isSuperAdmin ? selectedTenantId : undefined,
+                  firstName: parentFirstName.trim(),
+                  lastName: parentLastName.trim(),
+                  phone: parentPhone.replace(/\s+/g, "").trim() || undefined,
+                  email: parentEmail.trim() || undefined,
+                });
+
+                const parentPersonId = parentPersonRes?.data?.id || parentPersonRes?.Data?.Id || parentPersonRes?.id;
+
+                if (parentPersonId) {
+                  const parentRes: any = await createParentMutation.mutateAsync({
+                    personId: parentPersonId,
+                    tenantId: targetTenant,
+                  });
+
+                  const parentId = parentRes?.data?.id || parentRes?.Data?.Id || parentRes?.id;
+
+                  if (parentId) {
+                    await createStudentParentMutation.mutateAsync({
+                      studentId: createdStudentId,
+                      parentId: parentId,
+                      relationship: parentRelationship,
+                      isPrimary: parentIsPrimary,
+                      tenantId: targetTenant,
+                    });
+                  }
+                }
+              } catch (parentErr) {
+                console.error("Veli otomatik oluşturulurken hata:", parentErr);
+                toast.warning("Öğrenci oluşturuldu ancak veli kaydı eklenirken bir sorun oluştu. Daha sonra 'Veliler' butonundan ekleyebilirsiniz.");
+              }
+            }
+          } else if (parentMode === "existing_parent" && selectedParentPersonId) {
+            try {
+              let existingParent = parents?.find((p) => p.personId === selectedParentPersonId);
+              let parentId = existingParent?.id;
+
+              if (!parentId) {
+                const parentRes: any = await createParentMutation.mutateAsync({
+                  personId: selectedParentPersonId,
+                  tenantId: targetTenant,
+                });
+                parentId = parentRes?.data?.id || parentRes?.Data?.Id || parentRes?.id;
+              }
+
+              if (parentId) {
+                await createStudentParentMutation.mutateAsync({
+                  studentId: createdStudentId,
+                  parentId: parentId,
+                  relationship: parentRelationship,
+                  isPrimary: parentIsPrimary,
+                  tenantId: targetTenant,
+                });
+              }
+            } catch (parentErr) {
+              console.error("Mevcut veli bağlanırken hata:", parentErr);
+              toast.warning("Öğrenci oluşturuldu ancak veli bağlanırken bir sorun oluştu.");
+            }
+          }
+        }
+
         toast.success("Yeni öğrenci kaydı başarıyla oluşturuldu.");
         setIsFormOpen(false);
         refetchStudents();
         refetchPeople();
         refetchStudentBranches();
+        refetchParents();
+        refetchStudentParents();
       }
     } catch (err: any) {
       toast.error(getApiErrorMessage(err, "İşlem sırasında bir hata oluştu."));
@@ -415,7 +512,9 @@ function StudentsContent() {
     createStudentMutation.isPending ||
     updateStudentMutation.isPending ||
     createPersonMutation.isPending ||
-    updatePersonMutation.isPending;
+    updatePersonMutation.isPending ||
+    createParentMutation.isPending ||
+    createStudentParentMutation.isPending;
 
   return (
     <div className="space-y-6 animate-fade-in p-2 md:p-6">
@@ -443,6 +542,14 @@ function StudentsContent() {
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${(isLoadingStudents || isLoadingPeople) ? "animate-spin" : ""}`} />
             Yenile
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsExcelImportOpen(true)}
+            className="h-10 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 font-medium shadow-sm"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Excel'den Aktar
           </Button>
           <Button onClick={handleOpenCreate} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
             <Plus className="h-4 w-4 mr-2" />
@@ -737,6 +844,23 @@ function StudentsContent() {
         tenantId={isSuperAdmin ? selectedTenantId : userTenantId}
       />
 
+      {/* Student Excel Import Dialog */}
+      <StudentExcelImportDialog
+        isOpen={isExcelImportOpen}
+        onClose={() => setIsExcelImportOpen(false)}
+        branches={branches}
+        tenants={tenants}
+        tenantId={userTenantId}
+        isSuperAdmin={isSuperAdmin}
+        onSuccess={() => {
+          refetchStudents();
+          refetchPeople();
+          refetchStudentBranches();
+          refetchParents();
+          refetchStudentParents();
+        }}
+      />
+
       {/* Create / Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -998,6 +1122,167 @@ function StudentsContent() {
                 </select>
               </div>
             </div>
+
+            {/* Parent Information Section (Only for Initial Student Registration) */}
+            {!selectedStudent && (
+              <div className="space-y-4 p-4 rounded-lg border border-indigo-500/30 bg-indigo-500/5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                    <Users className="h-4 w-4" />
+                    Veli Bilgileri (Hızlı Kayıt)
+                  </h4>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground select-none">
+                    <input
+                      type="checkbox"
+                      checked={includeParent}
+                      onChange={(e) => setIncludeParent(e.target.checked)}
+                      className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                    />
+                    <span>Veli Kaydı Ekle</span>
+                  </label>
+                </div>
+
+                {includeParent && (
+                  <div className="space-y-3 pt-1">
+                    <div className="bg-background/80 p-1 rounded-lg flex gap-1 border border-border/50">
+                      <Button
+                        type="button"
+                        variant={parentMode === "new_parent" ? "default" : "ghost"}
+                        size="sm"
+                        className={`flex-1 text-xs h-8 ${parentMode === "new_parent" ? "bg-indigo-600 hover:bg-indigo-700 text-white" : ""}`}
+                        onClick={() => setParentMode("new_parent")}
+                      >
+                        <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                        Yeni Veli Oluştur
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={parentMode === "existing_parent" ? "default" : "ghost"}
+                        size="sm"
+                        className={`flex-1 text-xs h-8 ${parentMode === "existing_parent" ? "bg-indigo-600 hover:bg-indigo-700 text-white" : ""}`}
+                        onClick={() => setParentMode("existing_parent")}
+                      >
+                        <Users className="h-3.5 w-3.5 mr-1.5" />
+                        Mevcut Kişilerden Seç
+                      </Button>
+                    </div>
+
+                    {parentMode === "new_parent" ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="parentFirstName" className="text-xs">
+                              Veli Adı <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="parentFirstName"
+                              placeholder="Velinin adını giriniz..."
+                              value={parentFirstName}
+                              onChange={(e) => setParentFirstName(e.target.value)}
+                              className="text-xs"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="parentLastName" className="text-xs">
+                              Veli Soyadı <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="parentLastName"
+                              placeholder="Velinin soyadını giriniz..."
+                              value={parentLastName}
+                              onChange={(e) => setParentLastName(e.target.value)}
+                              className="text-xs"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="parentPhone" className="text-xs flex items-center justify-between">
+                              <span>Veli Telefonu</span>
+                              <span className="text-[10px] text-muted-foreground font-normal">(Opsiyonel)</span>
+                            </Label>
+                            <Input
+                              id="parentPhone"
+                              placeholder="05xxxxxxxxx"
+                              value={parentPhone}
+                              onChange={(e) => setParentPhone(e.target.value)}
+                              className="text-xs"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="parentEmail" className="text-xs flex items-center justify-between">
+                              <span>Veli E-posta</span>
+                              <span className="text-[10px] text-muted-foreground font-normal">(Opsiyonel)</span>
+                            </Label>
+                            <Input
+                              id="parentEmail"
+                              type="email"
+                              placeholder="veli@ornek.com"
+                              value={parentEmail}
+                              onChange={(e) => setParentEmail(e.target.value)}
+                              className="text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="parentSelect" className="text-xs">
+                          Kayıtlı Kişi / Veli Seçin <span className="text-destructive">*</span>
+                        </Label>
+                        <select
+                          id="parentSelect"
+                          value={selectedParentPersonId || ""}
+                          onChange={(e) => setSelectedParentPersonId(e.target.value ? Number(e.target.value) : undefined)}
+                          className="w-full h-10 px-3 py-2 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="">-- Listeden Kişi / Veli Seçiniz --</option>
+                          {(people || []).map((p) => (
+                            <option key={p.id} value={p.id}>
+                              #{p.id} - {p.firstName} {p.lastName} {p.phone ? `(${p.phone})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border/40 items-center">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="parentRelationship" className="text-xs">
+                          Yakınlık Derecesi
+                        </Label>
+                        <select
+                          id="parentRelationship"
+                          value={parentRelationship}
+                          onChange={(e) => setParentRelationship(e.target.value)}
+                          className="w-full h-9 px-3 py-1.5 text-xs rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          {["Anne", "Baba", "Vasi", "Abla", "Ağabey", "Teyze", "Hala", "Dayı", "Amca", "Diğer"].map((rel) => (
+                            <option key={rel} value={rel}>
+                              {rel}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-5">
+                        <input
+                          type="checkbox"
+                          id="parentIsPrimary"
+                          checked={parentIsPrimary}
+                          onChange={(e) => setParentIsPrimary(e.target.checked)}
+                          className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                        />
+                        <Label htmlFor="parentIsPrimary" className="text-xs cursor-pointer font-medium select-none">
+                          Birincil / Asıl Veli Olarak Belirle
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)} disabled={isSubmitting || isUploadingPhoto}>
