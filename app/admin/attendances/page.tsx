@@ -144,7 +144,12 @@ function AttendancesContent() {
     data: courseEnrollments,
     isLoading: isLoadingEnrollments,
   } = useCourseEnrollments(
-    selectedCourseId > 0 ? { courseId: selectedCourseId } : undefined
+    selectedCourseId > 0
+      ? {
+          courseId: selectedCourseId,
+          tenantId: selectedTenantId > 0 ? selectedTenantId : undefined,
+        }
+      : undefined
   );
 
   // Mutations
@@ -237,9 +242,11 @@ function AttendancesContent() {
 
   // Filter active enrolled students for current course
   const activeEnrolledStudents = useMemo(() => {
-    if (!courseEnrollments) return [];
-    return courseEnrollments.filter((e) => e.status === 1); // 1: Aktif
-  }, [courseEnrollments]);
+    if (!courseEnrollments || selectedCourseId <= 0) return [];
+    return courseEnrollments.filter(
+      (e) => e.status === 1 && e.courseId === selectedCourseId
+    ); // 1: Aktif ve seçilen kurs
+  }, [courseEnrollments, selectedCourseId]);
 
   // Synchronize Attendance Sheet when Course, Date, or Enrollments change
   useEffect(() => {

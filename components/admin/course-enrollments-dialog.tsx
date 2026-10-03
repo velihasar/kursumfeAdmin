@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -83,21 +83,26 @@ export function CourseEnrollmentsDialog({
 }: CourseEnrollmentsDialogProps) {
   const [activeTab, setActiveTab] = useState<"list" | "new">("list");
   const [searchTerm, setSearchTerm] = useState("");
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
 
   // Form State for new enrollment
-  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("none");
   const [customFee, setCustomFee] = useState<string>("");
   const [dueDay, setDueDay] = useState<string>("1");
   const [status, setStatus] = useState<string>("1");
   const [notes, setNotes] = useState<string>("");
 
+  const targetTenantId = course?.tenantId || tenantId;
+
   // Queries
-  const { data: allEnrollments, refetch: refetchEnrollments, isLoading } = useCourseEnrollments({
-    tenantId: course?.tenantId || tenantId,
-  });
+  const { data: allEnrollments, refetch: refetchEnrollments, isLoading } = useCourseEnrollments(
+    targetTenantId
+      ? { tenantId: targetTenantId, courseId: course?.id }
+      : undefined
+  );
 
   const { data: allStudents } = useStudents(
-    (course?.tenantId || tenantId) ? { tenantId: course?.tenantId || tenantId } : undefined
+    targetTenantId ? { tenantId: targetTenantId } : undefined
   );
 
   // Mutations
@@ -105,38 +110,68 @@ export function CourseEnrollmentsDialog({
   const updateMutation = useUpdateCourseEnrollment();
   const deleteMutation = useDeleteCourseEnrollment();
 
+  // Reset form when dialog opens or course changes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedStudentId("none");
+      setStudentSearchTerm("");
+      setCustomFee("");
+      setDueDay("1");
+      setStatus("1");
+      setNotes("");
+      setActiveTab("list");
+    }
+  }, [isOpen, course?.id]);
+
+  // Filter enrollments strictly for this specific course
+  const courseEnrollments = useMemo(() => {
+    if (!allEnrollments || !course?.id) return [];
+    return allEnrollments.filter((e) => Number(e.courseId) === Number(course.id));
+  }, [allEnrollments, course?.id]);
+
+  // Set of student IDs already enrolled in this course
+  const enrolledStudentIds = useMemo(() => {
+    return new Set(courseEnrollments.map((e) => Number(e.studentId)));
+  }, [courseEnrollments]);
+
+  // Filter available students who are NOT enrolled in this course
+  const availableStudents = useMemo(() => {
+    if (!allStudents) return [];
+    return allStudents.filter((s) => !enrolledStudentIds.has(Number(s.id)));
+  }, [allStudents, enrolledStudentIds]);
+
+  // Search filter for available students in the "Kursa Ekle" tab
+  const filteredAvailableStudents = useMemo(() => {
+    const q = studentSearchTerm.toLowerCase().trim();
+    if (!q) return availableStudents;
+    return availableStudents.filter((st) => {
+      const fullName = `${st.firstName || ""} ${st.lastName || ""}`.toLowerCase();
+      const num = (st.studentNumber || "").toLowerCase();
+      return fullName.includes(q) || num.includes(q);
+    });
+  }, [availableStudents, studentSearchTerm]);
+
+  // Search in already enrolled students
+  const filteredEnrollments = useMemo(() => {
+    return courseEnrollments.filter((e) => {
+      const student = allStudents?.find((s) => s.id === e.studentId);
+      const sName = (e.studentName || `${student?.firstName || ""} ${student?.lastName || ""}`).toLowerCase();
+      const sNumber = (student?.studentNumber || "").toLowerCase();
+      const q = searchTerm.toLowerCase();
+      return sName.includes(q) || sNumber.includes(q);
+    });
+  }, [courseEnrollments, allStudents, searchTerm]);
+
   if (!course) return null;
-
-  // Filter enrollments for this specific course
-  const courseEnrollments = (allEnrollments || []).filter(
-    (e) => e.courseId === course.id
-  );
-
-  const enrolledStudentIds = courseEnrollments.map((e) => e.studentId);
-
-  // Filter available students who are not yet enrolled in this course
-  const availableStudents = (allStudents || []).filter(
-    (s) => !enrolledStudentIds.includes(s.id)
-  );
-
-  // Search in enrolled students
-  const filteredEnrollments = courseEnrollments.filter((e) => {
-    const student = allStudents?.find((s) => s.id === e.studentId);
-    const sName = (e.studentName || `${student?.firstName || ""} ${student?.lastName || ""}`).toLowerCase();
-    const sNumber = (student?.studentNumber || "").toLowerCase();
-    const q = searchTerm.toLowerCase();
-    return sName.includes(q) || sNumber.includes(q);
-  });
 
   const handleCreateEnrollment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStudentId) {
+    if (!selectedStudentId || selectedStudentId === "none") {
       toast.error("Lütfen bir öğrenci seçiniz.");
       return;
     }
 
     try {
-      const targetTenantId = course.tenantId || tenantId;
       await createMutation.mutateAsync({
         tenantId: targetTenantId,
         studentId: Number(selectedStudentId),
@@ -149,7 +184,8 @@ export function CourseEnrollmentsDialog({
       });
 
       toast.success("Öğrenci kursa başarıyla kaydedildi.");
-      setSelectedStudentId("");
+      setSelectedStudentId("none");
+      setStudentSearchTerm("");
       setCustomFee("");
       setNotes("");
       setActiveTab("list");
@@ -395,28 +431,72 @@ export function CourseEnrollmentsDialog({
           <TabsContent value="new" className="flex-1 overflow-y-auto p-6 m-0">
             <form onSubmit={handleCreateEnrollment} className="space-y-4 max-w-lg mx-auto">
               <div className="space-y-1.5">
-                <Label htmlFor="enroll-student" className="text-xs">Öğrenci Seçiniz *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="enroll-student" className="text-xs font-semibold">
+                    Öğrenci Seçiniz *
+                  </Label>
+                  <span className="text-[11px] text-muted-foreground">
+                    ({availableStudents.length} kayıt edilebilir öğrenci)
+                  </span>
+                </div>
+
+                {availableStudents.length > 5 && (
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Listede öğrenci ara (ad, soyad veya no)..."
+                      value={studentSearchTerm}
+                      onChange={(e) => setStudentSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-xs"
+                    />
+                  </div>
+                )}
+
                 <Select
                   value={selectedStudentId}
-                  onValueChange={(val) => setSelectedStudentId(val || "")}
+                  onValueChange={(val) => setSelectedStudentId(val || "none")}
                 >
-                  <SelectTrigger id="enroll-student" className="h-9 text-xs">
+                  <SelectTrigger id="enroll-student" className="w-full h-9 text-xs">
                     <SelectValue placeholder="Öğrenci seçiniz...">
                       {(() => {
+                        if (!selectedStudentId || selectedStudentId === "none") return undefined;
                         const st = allStudents?.find((s) => String(s.id) === selectedStudentId);
-                        return st ? `${st.firstName} ${st.lastName}` : undefined;
+                        if (!st) return undefined;
+                        return (
+                          <span className="truncate" title={`${st.firstName} ${st.lastName}`}>
+                            {st.firstName} {st.lastName}
+                            {st.studentNumber ? ` (#${st.studentNumber})` : ""}
+                          </span>
+                        );
                       })()}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {availableStudents.length === 0 ? (
+                  <SelectContent className="max-h-64 w-full min-w-[320px] max-w-[500px]">
+                    <SelectItem value="none" className="text-xs text-muted-foreground">
+                      -- Öğrenci Seçiniz --
+                    </SelectItem>
+                    {filteredAvailableStudents.length === 0 ? (
                       <div className="p-3 text-center text-xs text-muted-foreground">
-                        Kursa eklenebilecek yeni öğrenci bulunamadı.
+                        {studentSearchTerm
+                          ? "Aramanıza uygun kayıt edilebilir öğrenci bulunamadı."
+                          : "Bu kursa eklenebilecek (kayıtlı olmayan) öğrenci bulunamadı."}
                       </div>
                     ) : (
-                      availableStudents.map((st) => (
-                        <SelectItem key={st.id} value={String(st.id)} className="text-xs">
-                          {st.firstName} {st.lastName} {st.studentNumber ? `(#${st.studentNumber})` : ""}
+                      filteredAvailableStudents.map((st) => (
+                        <SelectItem key={st.id} value={String(st.id)} className="text-xs py-2">
+                          <div className="flex items-center justify-between w-full gap-2 min-w-0">
+                            <span
+                              className="font-medium text-foreground truncate"
+                              title={`${st.firstName} ${st.lastName}`}
+                            >
+                              {st.firstName} {st.lastName}
+                            </span>
+                            {st.studentNumber && (
+                              <span className="text-[11px] font-mono text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded border border-border/50">
+                                #{st.studentNumber}
+                              </span>
+                            )}
+                          </div>
                         </SelectItem>
                       ))
                     )}
