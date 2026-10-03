@@ -86,7 +86,7 @@ export function CourseEnrollmentsDialog({
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
 
   // Form State for new enrollment
-  const [selectedStudentId, setSelectedStudentId] = useState<string>("none");
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [customFee, setCustomFee] = useState<string>("");
   const [dueDay, setDueDay] = useState<string>("1");
   const [status, setStatus] = useState<string>("1");
@@ -113,7 +113,7 @@ export function CourseEnrollmentsDialog({
   // Reset form when dialog opens or course changes
   useEffect(() => {
     if (isOpen) {
-      setSelectedStudentId("none");
+      setSelectedStudentId("");
       setStudentSearchTerm("");
       setCustomFee("");
       setDueDay("1");
@@ -166,7 +166,7 @@ export function CourseEnrollmentsDialog({
 
   const handleCreateEnrollment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStudentId || selectedStudentId === "none") {
+    if (!selectedStudentId || selectedStudentId.trim() === "") {
       toast.error("Lütfen bir öğrenci seçiniz.");
       return;
     }
@@ -184,7 +184,7 @@ export function CourseEnrollmentsDialog({
       });
 
       toast.success("Öğrenci kursa başarıyla kaydedildi.");
-      setSelectedStudentId("none");
+      setSelectedStudentId("");
       setStudentSearchTerm("");
       setCustomFee("");
       setNotes("");
@@ -454,12 +454,12 @@ export function CourseEnrollmentsDialog({
 
                 <Select
                   value={selectedStudentId}
-                  onValueChange={(val) => setSelectedStudentId(val || "none")}
+                  onValueChange={(val) => setSelectedStudentId(val || "")}
                 >
                   <SelectTrigger id="enroll-student" className="w-full h-9 text-xs">
                     <SelectValue placeholder="Öğrenci seçiniz...">
                       {(() => {
-                        if (!selectedStudentId || selectedStudentId === "none") return undefined;
+                        if (!selectedStudentId) return undefined;
                         const st = allStudents?.find((s) => String(s.id) === selectedStudentId);
                         if (!st) return undefined;
                         return (
@@ -472,9 +472,6 @@ export function CourseEnrollmentsDialog({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="max-h-64 w-full min-w-[320px] max-w-[500px]">
-                    <SelectItem value="none" className="text-xs text-muted-foreground">
-                      -- Öğrenci Seçiniz --
-                    </SelectItem>
                     {filteredAvailableStudents.length === 0 ? (
                       <div className="p-3 text-center text-xs text-muted-foreground">
                         {studentSearchTerm
