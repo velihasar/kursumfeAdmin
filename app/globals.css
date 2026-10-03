@@ -130,4 +130,27 @@
   }
 }
 
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-qr-card,
+  #printable-qr-card * {
+    visibility: visible;
+  }
+  #printable-qr-card {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(1.3);
+    width: 80%;
+    max-width: 500px;
+    border: 2px solid #000 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 32px !important;
+  }
+}
+
 

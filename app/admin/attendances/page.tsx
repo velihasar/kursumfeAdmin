@@ -57,6 +57,7 @@ import {
   RotateCcw,
   Sparkles,
   Info,
+  QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getApiErrorMessage, checkIsSuperAdmin } from "@/lib/utils";
@@ -75,6 +76,7 @@ import { useCourses } from "@/hooks/useCourses";
 import { useCourseEnrollments } from "@/hooks/useCourseEnrollments";
 import { useTenants } from "@/hooks/useTenants";
 import { AttendanceDatePicker, parseCourseDays } from "@/components/admin/attendance-date-picker";
+import { TenantAttendanceQrDialog } from "@/components/admin/tenant-attendance-qr-dialog";
 
 interface StudentAttendanceState {
   studentId: number;
@@ -93,6 +95,7 @@ function AttendancesContent() {
 
   // Active view tab
   const [activeTab, setActiveTab] = useState<"take" | "history">("take");
+  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
 
   // Filter States
   const [selectedTenantId, setSelectedTenantId] = useState<number>(
@@ -237,6 +240,8 @@ function AttendancesContent() {
     const action = searchParams.get("action");
     if (action === "new") {
       setActiveTab("take");
+    } else if (action === "qr") {
+      setIsQrDialogOpen(true);
     }
   }, [searchParams]);
 
@@ -455,26 +460,39 @@ function AttendancesContent() {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+        {/* Actions & Tab Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
           <Button
-            variant={activeTab === "take" ? "default" : "ghost"}
+            type="button"
+            variant="outline"
             size="sm"
-            onClick={() => setActiveTab("take")}
-            className="gap-1.5"
+            onClick={() => setIsQrDialogOpen(true)}
+            className="gap-1.5 shadow-xs border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
           >
-            <CheckCheck className="h-4 w-4" />
-            Hızlı Yoklama Al
+            <QrCode className="h-4 w-4" />
+            Kurum Giriş QR Kodu
           </Button>
-          <Button
-            variant={activeTab === "history" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("history")}
-            className="gap-1.5"
-          >
-            <Clock className="h-4 w-4" />
-            Yoklama Geçmişi
-          </Button>
+
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+            <Button
+              variant={activeTab === "take" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("take")}
+              className="gap-1.5"
+            >
+              <CheckCheck className="h-4 w-4" />
+              Hızlı Yoklama Al
+            </Button>
+            <Button
+              variant={activeTab === "history" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("history")}
+              className="gap-1.5"
+            >
+              <Clock className="h-4 w-4" />
+              Yoklama Geçmişi
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -1159,6 +1177,16 @@ function AttendancesContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Kurum Giriş QR Kodu Dialog */}
+      <TenantAttendanceQrDialog
+        isOpen={isQrDialogOpen}
+        onClose={() => setIsQrDialogOpen(false)}
+        tenants={tenants}
+        selectedTenantId={selectedTenantId}
+        onTenantChange={(id) => setSelectedTenantId(id)}
+        isSuperAdmin={isSuperAdmin}
+      />
     </div>
   );
 }
