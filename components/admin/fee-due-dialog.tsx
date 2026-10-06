@@ -28,7 +28,7 @@ import { useCourseEnrollments } from "@/hooks/useCourseEnrollments";
 import { useStudents } from "@/hooks/useStudents";
 import { useCreateFeeDue, useUpdateFeeDue } from "@/hooks/useFeeDues";
 import { FeeDueGetAllDto } from "@/types/feeDue.types";
-import { Building2, Receipt, Calendar, CreditCard, User, BookOpen } from "lucide-react";
+import { Building2, Receipt, Calendar, CreditCard, User, BookOpen, Info, AlertCircle } from "lucide-react";
 
 interface FeeDueDialogProps {
   open: boolean;
@@ -170,7 +170,12 @@ export function FeeDueDialog({
     }
 
     try {
+      const numAmount = Number(amount);
       if (isEdit && feeDue) {
+        const curPaid = Number(feeDue.paidAmount) || 0;
+        const remaining = Math.max(0, numAmount - curPaid);
+        const status = (remaining <= 0 && numAmount > 0 && curPaid >= numAmount) ? 2 : (curPaid > 0 ? 1 : 0);
+
         await updateMutation.mutateAsync({
           id: feeDue.id,
           tenantId: targetTenant,
@@ -178,11 +183,14 @@ export function FeeDueDialog({
           studentId: Number(studentId),
           period: period.trim(),
           title: title.trim(),
-          amount: Number(amount),
+          amount: numAmount,
+          paidAmount: curPaid,
+          remainingAmount: remaining,
+          status: status,
           dueDate: `${dueDate}T00:00:00`,
           description: description.trim() || undefined,
         });
-        toast.success("Aidat/tahakkuk kaydı güncellendi.");
+        toast.success("Aidat/tahakkuk planı güncellendi.");
       } else {
         await createMutation.mutateAsync({
           tenantId: targetTenant,
@@ -190,9 +198,9 @@ export function FeeDueDialog({
           studentId: Number(studentId),
           period: period.trim(),
           title: title.trim(),
-          amount: Number(amount),
+          amount: numAmount,
           paidAmount: 0,
-          remainingAmount: Number(amount),
+          remainingAmount: numAmount,
           dueDate: `${dueDate}T00:00:00`,
           status: 0,
           description: description.trim() || undefined,
@@ -227,12 +235,57 @@ export function FeeDueDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5 text-primary" />
-            {isEdit ? "Aidat / Tahakkuk Düzenle" : "Yeni Aidat / Tahakkuk Ekle"}
+            {isEdit ? "Aidat / Taksit Planı Düzenle" : "Yeni Aidat / Taksit Ekle"}
           </DialogTitle>
           <DialogDescription>
-            Öğrenci ve kurs bazlı aidat borç kaydı oluşturun veya düzenleyin.
+            {isEdit
+              ? "Taksitin vade tarihini, dönemini veya toplam tutarını güncelleyin."
+              : "Öğrenci ve kurs bazlı aidat/taksit borç kaydı oluşturun."}
           </DialogDescription>
         </DialogHeader>
+
+        {isEdit && feeDue && (
+          <div className="rounded-lg border bg-muted/30 p-3 text-xs space-y-2 mt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground font-medium">Mevcut Tahsilat Durumu:</span>
+              <span className="font-bold">
+                {feeDue.status === 2 ? (
+                  <span className="text-emerald-600">✓ Tam Ödendi</span>
+                ) : (feeDue.paidAmount || 0) > 0 ? (
+                  <span className="text-amber-600">Kısmi Ödendi</span>
+                ) : (
+                  <span className="text-rose-600">Ödenmedi (Borçlu)</span>
+                )}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/60 text-[11px]">
+              <div>
+                <span className="text-muted-foreground block">Taksit Tutarı:</span>
+                <span className="font-bold text-foreground">
+                  ₺{Number(amount || feeDue.amount).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block">Yapılan Tahsilat:</span>
+                <span className="font-bold text-emerald-600">
+                  ₺{(feeDue.paidAmount || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block">Kalan Borç:</span>
+                <span className="font-bold text-rose-600">
+                  ₺{Math.max(0, Number(amount || feeDue.amount) - (feeDue.paidAmount || 0)).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+            <div className="text-[11px] text-muted-foreground bg-background/90 p-2 rounded border flex items-start gap-1.5 mt-1">
+              <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+              <span>
+                Burada girdiğiniz <strong>Tutar</strong> taksitin toplam tutarıdır. Tahsilat / ödeme almak için listedeki yeşil <strong>"Ödeme Al"</strong> butonunu kullanabilirsiniz.
+              </span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* SuperAdmin Kurum Seçimi */}

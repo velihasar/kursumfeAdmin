@@ -22,6 +22,8 @@ import {
   ChevronLeft,
   Menu,
   Plus,
+  Megaphone,
+  CalendarDays,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -126,6 +128,22 @@ export function Sidebar() {
       canAdd: true,
       addHref: "/admin/wallet?action=deposit",
       addTitle: "Bakiye Yükle",
+    },
+    {
+      title: "Duyurular",
+      href: "/admin/announcements",
+      icon: Megaphone,
+      canAdd: true,
+      addHref: "/admin/announcements?action=new",
+      addTitle: "Yeni Duyuru Ekle",
+    },
+    {
+      title: "Etkinlikler",
+      href: "/admin/events",
+      icon: CalendarDays,
+      canAdd: true,
+      addHref: "/admin/events?action=new",
+      addTitle: "Yeni Etkinlik Ekle",
     },
     {
       title: "Kullanıcılar",
