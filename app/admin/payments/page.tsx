@@ -358,42 +358,40 @@ function PaymentsContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* ─── Header ─── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Banknote className="h-7 w-7 text-emerald-600" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <Banknote className="h-8 w-8 text-primary" />
             Aidat & Ödeme Yönetimi
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Öğrenci aidat tahakkuklarını (FeeDue) ve tahsilatları (Payment) takip edin, yeni ödeme ve borç kaydı oluşturun.
+            Öğrenci aidat tahakkuklarını ve tahsilatları takip edin, yeni ödeme ve borç kaydı oluşturun.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => {
               setEditingFeeDue(null);
               setIsFeeDueDialogOpen(true);
             }}
-            className="gap-1.5"
+            className="h-10 gap-1.5"
           >
             <Receipt className="h-4 w-4 text-primary" />
-            + Yeni Aidat Ekle
+            Yeni Aidat Ekle
           </Button>
 
           <Button
-            size="sm"
             onClick={() => {
               setEditingPayment(null);
               setPrefilledFeeDue(null);
               setIsPaymentDialogOpen(true);
             }}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm"
+            className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm"
           >
             <Banknote className="h-4 w-4" />
             Tahsilat / Ödeme Al
@@ -403,20 +401,20 @@ function PaymentsContent() {
 
       {/* ─── Financial Summary Cards ─── */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Tahakkuk</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Tahakkuk</CardTitle>
+            <Receipt className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₺{stats.totalDue.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold text-foreground">₺{stats.totalDue.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</div>
             <p className="text-xs text-muted-foreground mt-1">Tüm aidat ve borç kayıtları</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Tahsilat</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Tahsilat</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
@@ -430,9 +428,9 @@ function PaymentsContent() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bekleyen Alacak</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Bekleyen Alacak</CardTitle>
             <AlertCircle className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
@@ -443,9 +441,9 @@ function PaymentsContent() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kurum Seçimi</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Kurum Seçimi</CardTitle>
             <Building2 className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -574,7 +572,7 @@ function PaymentsContent() {
               <div className="rounded-md border overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50">
+                    <TableRow>
                       <TableHead className="w-12 text-center">#</TableHead>
                       <TableHead>Dönem</TableHead>
                       <TableHead>Aidat Başlığı / Kurs</TableHead>
@@ -746,7 +744,7 @@ function PaymentsContent() {
               <div className="rounded-md border overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50">
+                    <TableRow>
                       <TableHead className="w-12 text-center">#</TableHead>
                       <TableHead>Makbuz / Tarih</TableHead>
                       <TableHead>Öğrenci & Veli</TableHead>

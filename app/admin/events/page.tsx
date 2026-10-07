@@ -337,11 +337,11 @@ function EventsContent() {
   const registrationCount = events?.filter((e) => e.isRegistrationRequired).length || 0;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* Top Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <CalendarDays className="h-8 w-8 text-primary" />
             Etkinlik & Takvim Yönetimi
           </h1>
@@ -350,17 +350,16 @@ function EventsContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => refetch()}
-            className="gap-2"
+            className="h-10 gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-1" />
             Yenile
           </Button>
-          <Button onClick={handleOpenCreate} className="gap-2 shadow-md">
+          <Button onClick={handleOpenCreate} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm gap-2">
             <Plus className="h-4 w-4" />
             Yeni Etkinlik Ekle
           </Button>
@@ -369,20 +368,20 @@ function EventsContent() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-l-4 border-l-primary shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Etkinlik</CardTitle>
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Etkinlik</CardTitle>
+            <CalendarDays className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCount}</div>
+            <div className="text-2xl font-bold text-foreground">{totalCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Sistemdeki tüm kayıtlı etkinlikler</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500 shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Yaklaşan & Aktif</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Yaklaşan & Aktif</CardTitle>
             <Clock className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -391,9 +390,9 @@ function EventsContent() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500 shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kayıt Gerektirenler</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Kayıt Gerektirenler</CardTitle>
             <Ticket className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -404,17 +403,10 @@ function EventsContent() {
       </div>
 
       {/* Main Content Card */}
-      <Card className="shadow-sm border border-border/80">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-xl">Etkinlik Listesi</CardTitle>
-              <CardDescription>
-                Tüm şube ve kurum düzeyindeki takvim faaliyetleri.
-              </CardDescription>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
+      <Card className="shadow-sm border border-border overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex flex-wrap items-center gap-3 w-full">
               {/* SuperAdmin Tenant Filter */}
               {isSuperAdmin && (
                 <div className="flex items-center gap-2">
@@ -505,7 +497,7 @@ function EventsContent() {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Spinner className="h-8 w-8 text-primary" />
@@ -537,9 +529,9 @@ function EventsContent() {
               )}
             </div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="w-16">#ID</TableHead>
                     {isSuperAdmin && <TableHead>Kurum</TableHead>}

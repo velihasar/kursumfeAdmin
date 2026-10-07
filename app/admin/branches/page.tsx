@@ -247,11 +247,11 @@ function BranchesContent() {
   const activeCount = branches?.filter((b) => b.isActive !== false).length || 0;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* Top Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <GitBranch className="h-8 w-8 text-primary" />
             Şube Yönetimi
           </h1>
@@ -262,17 +262,16 @@ function BranchesContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => refetch()}
-            className="gap-2"
+            className="h-10 gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-1" />
             Yenile
           </Button>
-          <Button onClick={handleOpenCreate} className="gap-2 shadow-md">
+          <Button onClick={handleOpenCreate} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm gap-2">
             <Plus className="h-4 w-4" />
             Yeni Şube Ekle
           </Button>
@@ -281,37 +280,37 @@ function BranchesContent() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-l-4 border-l-primary shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {isSuperAdmin ? "Toplam Şube (Tüm Kurumlar)" : "Toplam Şube"}
             </CardTitle>
-            <GitBranch className="h-4 w-4 text-muted-foreground" />
+            <GitBranch className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCount}</div>
+            <div className="text-2xl font-bold text-foreground">{totalCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Kayıtlı tüm şubeler</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aktif Şubeler</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Aktif Şubeler</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{activeCount}</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{activeCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Aktif hizmet veren şubeler</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500 shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">İletişim Bilgili</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">İletişim Bilgili</CardTitle>
             <Phone className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {branches?.filter((b) => b.phone || b.address).length || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Telefon veya adres kayıtlı</p>
@@ -319,32 +318,23 @@ function BranchesContent() {
         </Card>
       </div>
 
-      {/* Main Content Card */}
-      <Card className="shadow-sm border border-border/80">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-xl">Şube Listesi</CardTitle>
-              <CardDescription>
-                {isSuperAdmin
-                  ? "Sistemdeki tüm kurumlara ait şubeler."
-                  : "Kurumunuza ait şubelerin detaylı listesi."}
-              </CardDescription>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
+      {/* Main Table Card */}
+      <Card className="border border-border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex flex-wrap items-center gap-3 w-full">
               {/* SuperAdmin Tenant Filter Dropdown */}
               {isSuperAdmin && (
                 <div className="flex items-center gap-2">
                   <School className="h-4 w-4 text-muted-foreground shrink-0" />
                   <select
-                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                    className="h-10 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring font-medium"
                     value={selectedTenantFilter || ""}
                     onChange={(e) =>
                       setSelectedTenantFilter(Number(e.target.value) || undefined)
                     }
                   >
-                    <option value="">Tüm Kurumlar</option>
+                    <option value="">Tüm Kurumlar (Hepsi)</option>
                     {tenants?.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}
@@ -355,11 +345,11 @@ function BranchesContent() {
               )}
 
               {/* Search Input */}
-              <div className="relative w-full md:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Şube ara..."
-                  className="pl-9 h-9"
+                  className="pl-9 h-10 text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -368,7 +358,7 @@ function BranchesContent() {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Spinner className="h-8 w-8 text-primary" />
@@ -400,9 +390,9 @@ function BranchesContent() {
               )}
             </div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="w-16">#ID</TableHead>
                     {isSuperAdmin && <TableHead>Bağlı Kurum</TableHead>}

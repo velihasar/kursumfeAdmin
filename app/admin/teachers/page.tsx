@@ -601,32 +601,70 @@ function TeachersContent() {
         </div>
       </div>
 
-      {/* Main Card */}
-      <Card className="border-border shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div>
-              <CardTitle>Öğretmen Listesi</CardTitle>
-              <CardDescription>
-                Okulunuzda görev yapan tüm öğretmenlerin detaylı listesi ve şube atamaları.
-              </CardDescription>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Öğretmen</CardTitle>
+            <UserCheck className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{teacherListWithPerson.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Sistemde kayıtlı eğitmen kadrosu</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Şubesi Atanmış</CardTitle>
+            <GitFork className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {teacherListWithPerson.filter((t) => t.branch).length}
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-3">
+            <p className="text-xs text-muted-foreground mt-1">Aktif şube ataması olan öğretmenler</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Fotoğraflı Profil</CardTitle>
+            <Camera className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {teacherListWithPerson.filter((t) => t.person?.photoUrl).length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Profil fotoğrafı yüklenmiş olanlar</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Card */}
+      <Card className="border border-border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
               {isSuperAdmin && (
-                <select
-                  value={tenantFilter || ""}
-                  onChange={(e) => setTenantFilter(e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-10 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Tüm Kurumlar</option>
-                  {(tenants || []).map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full sm:w-56">
+                  <select
+                    value={tenantFilter || ""}
+                    onChange={(e) => setTenantFilter(e.target.value ? Number(e.target.value) : undefined)}
+                    className={`w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring ${
+                      !tenantFilter ? "text-muted-foreground" : "text-foreground font-medium"
+                    }`}
+                  >
+                    <option value="" className="text-muted-foreground">Tüm Kurumlar (Hepsi)</option>
+                    {(tenants || []).map((t) => (
+                      <option key={t.id} value={t.id} className="text-foreground">
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
-              <div className="relative w-full sm:w-64">
+              <div className="relative w-full sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Ad, Soyad veya İletişim ile ara..."
@@ -660,8 +698,8 @@ function TeachersContent() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-12">Foto</TableHead>
+                  <TableRow>
+                    <TableHead className="w-12">Fotoğraf</TableHead>
                     <TableHead>Ad Soyad</TableHead>
                     {isSuperAdmin && <TableHead>Kurum / Okul</TableHead>}
                     <TableHead>Şube</TableHead>

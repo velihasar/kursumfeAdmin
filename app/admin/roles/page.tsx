@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { ShieldCheck, Plus, Edit, Trash2, Key } from "lucide-react";
+import { ShieldCheck, Plus, Edit, Trash2, Key, Shield, Lock, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { checkIsSuperAdmin } from "@/lib/utils";
 
@@ -14,6 +14,13 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RoleDialog } from "@/components/admin/role-dialog";
 import { RolePermissionsDialog } from "@/components/admin/role-permissions-dialog";
 import {
@@ -166,45 +173,104 @@ export default function RolesPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/admin" />}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Roller & İzinler</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        {isSuperAdmin && (
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" /> Yeni Rol Ekle
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <ShieldCheck className="h-8 w-8 text-primary" />
+            Rol & Yetki Yönetimi
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Kullanıcı grupları, roller ve sistemsel yetki atamalarını yönetin.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+            Yenile
           </Button>
-        )}
+          {isSuperAdmin && (
+            <Button onClick={handleCreate} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
+              <Plus className="mr-2 h-4 w-4" /> Yeni Rol Ekle
+            </Button>
+          )}
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <Spinner size="lg" className="mb-4" />
-          <p>Roller yükleniyor...</p>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={roles}
-          showSearch={true}
-          searchPlaceholder="Rol Ara..."
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
-          totalRecords={roles.length}
-          totalLabel="rol"
-          onRefresh={() => refetch()}
-          isRefreshing={isFetching}
-        />
-      )}
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Rol</CardTitle>
+            <ShieldCheck className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{roles.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Tanımlı kullanıcı yetki grupları</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Yönetim Yetkili</CardTitle>
+            <Lock className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {roles.filter((r) => {
+                const name = (r.groupName || (r as any).GroupName || "").toLowerCase();
+                return name.includes("admin") || name.includes("müdür") || name.includes("yönetici");
+              }).length || 1}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Üst düzey yetkiye sahip roller</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Operasyonel Roller</CardTitle>
+            <Shield className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {Math.max(roles.length - (roles.filter((r) => {
+                const name = (r.groupName || (r as any).GroupName || "").toLowerCase();
+                return name.includes("admin") || name.includes("müdür") || name.includes("yönetici");
+              }).length || 1), 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Öğretmen, veli ve personel rolleri</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Card */}
+      <Card className="border border-border shadow-sm">
+        <CardContent className="p-4 sm:p-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Spinner size="lg" className="mb-4" />
+              <p>Roller yükleniyor...</p>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={roles}
+              showSearch={true}
+              searchPlaceholder="Rol Ara..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              totalRecords={roles.length}
+              totalLabel="rol"
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Rol Düzenleme / Ekleme Modalı */}
       <RoleDialog

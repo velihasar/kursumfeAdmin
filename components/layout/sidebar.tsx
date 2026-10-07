@@ -269,6 +269,32 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Masavtech Attribution Footer */}
+      <div
+        className={cn(
+          "border-t border-border bg-muted/20 flex items-center justify-center text-center select-none shrink-0 transition-all",
+          isCollapsed ? "py-2.5 px-1" : "py-3 px-4"
+        )}
+      >
+        {isCollapsed ? (
+          <span
+            className="text-[10px] font-black tracking-tighter text-primary/80"
+            title="Masavtech Hizmetidir"
+          >
+            M
+          </span>
+        ) : (
+          <div className="flex flex-col items-center gap-0.5">
+            <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              <span className="font-extrabold text-primary tracking-wider">MASAVTECH</span> HİZMETİDİR
+            </p>
+            <span className="text-[10px] text-muted-foreground/60 font-mono">
+              © {new Date().getFullYear()}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

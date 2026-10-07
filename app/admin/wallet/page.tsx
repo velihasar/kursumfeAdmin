@@ -282,12 +282,12 @@ function WalletManagementContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <ShoppingBag className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <ShoppingBag className="h-8 w-8 text-primary" />
             Kantin, Dolap & Bakiye Yönetimi
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -295,19 +295,19 @@ function WalletManagementContent() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Button
             onClick={handleOpenCreateProduct}
             variant="outline"
-            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 shadow-xs gap-1.5"
+            className="h-10 border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 shadow-xs gap-1.5"
           >
             <Tag className="h-4 w-4" />
-            + Yeni Ürün Tanımla
+            Yeni Ürün Tanımla
           </Button>
 
           <Button
             onClick={() => handleOpenSpend()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs gap-2"
+            className="h-10 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs gap-2"
           >
             <ShoppingBag className="h-4 w-4" />
             Hızlı Dolap Satışı
@@ -315,7 +315,7 @@ function WalletManagementContent() {
 
           <Button
             onClick={() => handleOpenDeposit()}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs gap-2"
+            className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs gap-2"
           >
             <Plus className="h-4 w-4" />
             Bakiye Yükle
@@ -325,59 +325,55 @@ function WalletManagementContent() {
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-emerald-500 shadow-xs">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">
-              Toplam Öğrenci Bakiyesi
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Öğrenci Bakiyesi</CardTitle>
+            <Wallet className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
               ₺{metrics.totalBalance.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            {metrics.activeWalletsCount} öğrencide aktif bakiye var
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{metrics.activeWalletsCount} öğrencide aktif bakiye var</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500 shadow-xs">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">
-              Toplam Yüklenen Avans
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold text-foreground">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Yüklenen Avans</CardTitle>
+            <ArrowDownLeft className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
               ₺{metrics.totalDeposited.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            Velilerden alınan toplam avans
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Velilerden alınan toplam avans</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-indigo-500 shadow-xs">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">
-              Toplam Harcanan (Kantin/Dolap)
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold text-foreground">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Harcanan (Kantin)</CardTitle>
+            <Coffee className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
               ₺{metrics.totalSpent.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            Su, içecek ve kantin çıkışları
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Su, içecek ve kantin çıkışları</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500 shadow-xs">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-medium uppercase tracking-wider">
-              Tanımlı Kantin Ürünleri
-            </CardDescription>
-            <CardTitle className="text-2xl font-bold text-foreground">
-              {metrics.totalProductsCount} Ürün
-            </CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tanımlı Kantin Ürünleri</CardTitle>
+            <Package className="h-4 w-4 text-purple-500" />
           </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">
-            Fiyat listesinde kayıtlı ürünler
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {metrics.totalProductsCount} Ürün
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Fiyat listesinde kayıtlı ürünler</p>
           </CardContent>
         </Card>
       </div>

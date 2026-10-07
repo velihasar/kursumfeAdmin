@@ -674,14 +674,14 @@ export function ProductWizardDialog({
             <p className="text-sm text-muted-foreground">Her renk/beden kombinasyonu için stok ve kod bilgilerini girin.</p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 pr-3 font-medium">Renk</th>
-                    <th className="text-left py-2 pr-3 font-medium">Beden</th>
-                    <th className="text-left py-2 pr-3 font-medium">Stok</th>
-                    <th className="text-left py-2 pr-3 font-medium">Fiyat Farkı (₺)</th>
-                    <th className="text-left py-2 pr-3 font-medium">SKU</th>
-                    <th className="text-left py-2 font-medium">Barkod</th>
+                <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs font-semibold">
+                  <tr>
+                    <th className="text-left py-2.5 px-3 font-semibold">Renk</th>
+                    <th className="text-left py-2.5 px-3 font-semibold">Beden</th>
+                    <th className="text-left py-2.5 px-3 font-semibold">Stok</th>
+                    <th className="text-left py-2.5 px-3 font-semibold">Fiyat Farkı (₺)</th>
+                    <th className="text-left py-2.5 px-3 font-semibold">SKU</th>
+                    <th className="text-left py-2.5 px-3 font-semibold">Barkod</th>
                   </tr>
                 </thead>
                 <tbody>

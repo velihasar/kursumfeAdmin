@@ -309,11 +309,11 @@ function AnnouncementsContent() {
   const publishedCount = announcements?.filter((a) => a.isPublished !== false).length || 0;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* Top Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <Megaphone className="h-8 w-8 text-primary" />
             Duyuru Yönetimi
           </h1>
@@ -322,17 +322,16 @@ function AnnouncementsContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => refetch()}
-            className="gap-2"
+            className="h-10 gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-1" />
             Yenile
           </Button>
-          <Button onClick={handleOpenCreate} className="gap-2 shadow-md">
+          <Button onClick={handleOpenCreate} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm gap-2">
             <Plus className="h-4 w-4" />
             Yeni Duyuru Ekle
           </Button>
@@ -341,52 +340,45 @@ function AnnouncementsContent() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-l-4 border-l-primary shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Duyuru</CardTitle>
-            <Megaphone className="h-4 w-4 text-muted-foreground" />
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Duyuru</CardTitle>
+            <Megaphone className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCount}</div>
+            <div className="text-2xl font-bold text-foreground">{totalCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Sistemdeki tüm kayıtlı duyurular</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500 shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Önemli Duyurular</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Önemli Duyurular</CardTitle>
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{importantCount}</div>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{importantCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Öncelikli olarak işaretlenmiş</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Yayında Olanlar</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Yayında Olanlar</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{publishedCount}</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{publishedCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Kullanıcıların erişimine açık</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content Card */}
-      <Card className="shadow-sm border border-border/80">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-xl">Duyuru Listesi</CardTitle>
-              <CardDescription>
-                Kurumunuz veya şubeleriniz için yayınlanan tüm duyurular.
-              </CardDescription>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
+      <Card className="border border-border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex flex-wrap items-center gap-3 w-full">
               {/* SuperAdmin Tenant Filter */}
               {isSuperAdmin && (
                 <div className="flex items-center gap-2">
@@ -460,7 +452,7 @@ function AnnouncementsContent() {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Spinner className="h-8 w-8 text-primary" />
@@ -492,9 +484,9 @@ function AnnouncementsContent() {
               )}
             </div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="w-16">#ID</TableHead>
                     {isSuperAdmin && <TableHead>Kurum</TableHead>}

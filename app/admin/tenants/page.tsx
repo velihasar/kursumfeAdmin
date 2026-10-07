@@ -249,7 +249,7 @@ export default function TenantsPage() {
   });
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -264,10 +264,10 @@ export default function TenantsPage() {
       </Breadcrumb>
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <Building2 className="h-7 w-7 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <Building2 className="h-8 w-8 text-primary" />
             Kurum / Okul Yönetimi
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -276,26 +276,71 @@ export default function TenantsPage() {
               : "Kurumunuza ait genel bilgileri bu ekrandan görüntüleyebilir ve güncellleyebilirsiniz."}
           </p>
         </div>
-        {isSuperAdmin && (
-          <Button onClick={handleOpenAdd} className="gap-2 shrink-0">
-            <Plus className="h-4 w-4" />
-            Yeni Kurum Ekle
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Yenile
           </Button>
-        )}
+          {isSuperAdmin && (
+            <Button onClick={handleOpenAdd} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm gap-2">
+              <Plus className="h-4 w-4" />
+              Yeni Kurum Ekle
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Kurum</CardTitle>
+            <Building2 className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{tenants?.length || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Sistemde kayıtlı kurum ve okul sayısı</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Aktif Hizmet Veren</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {tenants?.filter((t) => t.isActive !== false).length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Aktif statüdeki okul ve kurumlar</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Kod Tanımlı</CardTitle>
+            <Hash className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {tenants?.filter((t) => t.code).length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Kurum kodu atanmış yapılar</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content Card */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle className="text-lg">Kayıtlı Kurumlar</CardTitle>
-              <CardDescription>
-                Sistemde tanımlı toplam {tenants?.length || 0} kurum bulunmaktadır.
-              </CardDescription>
-            </div>
-
-            <div className="flex items-center gap-3">
+      <Card className="border border-border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -307,16 +352,6 @@ export default function TenantsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
-              {/* Refresh Button */}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => refetch()}
-                title="Yenile"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </CardHeader>

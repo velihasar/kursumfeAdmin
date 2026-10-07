@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Plus, Edit, Trash2, TicketPercent, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, TicketPercent, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 
@@ -14,6 +14,13 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CouponDialog } from "@/components/admin/coupon-dialog";
 import {
   AlertDialog,
@@ -228,50 +235,61 @@ export default function CouponsPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/admin" />}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Kuponlar & İndirimler</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        {/* {role !== "VIEWER" && ( */}
-          <Button onClick={() => { setSelected(null); setDialogOpen(true); }}>
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <TicketPercent className="h-8 w-8 text-primary" />
+            Kupon & İndirim Yönetimi
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            İndirim kupon kodlarını, kullanım limitlerini ve kampanya tarihlerini yönetin.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+            Yenile
+          </Button>
+          <Button onClick={() => { setSelected(null); setDialogOpen(true); }} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
             <Plus className="mr-2 h-4 w-4" /> Kupon Ekle
           </Button>
-        {/* )} */}
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <Spinner size="lg" className="mb-4" />
-          <p>Kuponlar yükleniyor...</p>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={coupons}
-          showSearch={true}
-          searchPlaceholder="Kupon Kodu Ara..."
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
-          totalRecords={totalRecords}
-          totalLabel="kupon"
-          page={page}
-          pageSize={pageSize}
-          pageCount={totalPages}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          onRefresh={() => refetch()}
-          isRefreshing={isFetching}
-        />
-      )}
+      {/* Main Card */}
+      <Card className="border border-border shadow-sm">
+        <CardContent className="p-4 sm:p-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Spinner size="lg" className="mb-4" />
+              <p>Kuponlar yükleniyor...</p>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={coupons}
+              showSearch={true}
+              searchPlaceholder="Kupon Kodu Ara..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              totalRecords={totalRecords}
+              totalLabel="kupon"
+              page={page}
+              pageSize={pageSize}
+              pageCount={totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       <CouponDialog
         open={dialogOpen}

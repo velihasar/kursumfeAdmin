@@ -447,12 +447,12 @@ function AttendancesContent() {
   }, [attendances, historyCourseFilter, historyStatusFilter, historySearch]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* ─── Header ─── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <ClipboardCheck className="h-7 w-7 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <ClipboardCheck className="h-8 w-8 text-primary" />
             Yoklama & Devam Durumu
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -461,13 +461,12 @@ function AttendancesContent() {
         </div>
 
         {/* Actions & Tab Switcher */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={() => setIsQrDialogOpen(true)}
-            className="gap-1.5 shadow-xs border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+            className="h-10 gap-1.5 shadow-xs border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
           >
             <QrCode className="h-4 w-4" />
             Kurum Giriş QR Kodu
@@ -476,18 +475,16 @@ function AttendancesContent() {
           <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
             <Button
               variant={activeTab === "take" ? "default" : "ghost"}
-              size="sm"
               onClick={() => setActiveTab("take")}
-              className="gap-1.5"
+              className="h-9 gap-1.5"
             >
               <CheckCheck className="h-4 w-4" />
               Hızlı Yoklama Al
             </Button>
             <Button
               variant={activeTab === "history" ? "default" : "ghost"}
-              size="sm"
               onClick={() => setActiveTab("history")}
-              className="gap-1.5"
+              className="h-9 gap-1.5"
             >
               <Clock className="h-4 w-4" />
               Yoklama Geçmişi
@@ -498,20 +495,20 @@ function AttendancesContent() {
 
       {/* ─── Summary Stat Cards ─── */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Kayıt</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Toplam Kayıt</CardTitle>
+            <ClipboardCheck className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold text-foreground">{stats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">Sistemdeki tüm yoklama girdileri</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Katılım Oranı</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Katılım Oranı</CardTitle>
             <Sparkles className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
@@ -520,9 +517,9 @@ function AttendancesContent() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mevcut (Geldi)</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Mevcut (Geldi)</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
@@ -531,9 +528,9 @@ function AttendancesContent() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Devamsız (Gelmedi)</CardTitle>
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Devamsız (Gelmedi)</CardTitle>
             <XCircle className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
@@ -954,7 +951,7 @@ function AttendancesContent() {
             <div className="rounded-md border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow>
                     <TableHead className="w-12 text-center">#</TableHead>
                     <TableHead>Tarih</TableHead>
                     <TableHead>Kurs / Ders</TableHead>

@@ -54,6 +54,7 @@ import {
   Sparkles,
   Layers,
   GraduationCap,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getApiErrorMessage, checkIsSuperAdmin } from "@/lib/utils";
@@ -309,87 +310,99 @@ function CoursesContent() {
   const totalTeachersAssigned = new Set((courses || []).map((c) => c.teacherId).filter(Boolean)).size;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6 pb-12">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <BookOpen className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <BookOpen className="h-8 w-8 text-primary" />
             Kurs & Ders Yönetimi
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Kurumdaki kursları, ders programlarını, kontenjanları ve kursiyer kayıtlarını yönetin.
           </p>
         </div>
-        <Button onClick={handleOpenCreate} className="gap-2 shadow-sm shrink-0">
-          <Plus className="h-4 w-4" />
-          Yeni Kurs Ekle
-        </Button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetchCourses()}
+            disabled={isLoadingCourses}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingCourses ? "animate-spin" : ""}`} />
+            Yenile
+          </Button>
+          <Button onClick={handleOpenCreate} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Kurs Ekle
+          </Button>
+        </div>
       </div>
 
       {/* Metrics / Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="shadow-2xs">
-          <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Toplam Kurs / Ders
             </CardTitle>
             <BookOpen className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div className="text-2xl font-bold text-foreground">{totalCourses}</div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Sistemde tanımlı kurs</p>
+            <p className="text-xs text-muted-foreground mt-1">Sistemde tanımlı kurs</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Toplam Kursiyer Kaydı
             </CardTitle>
             <Users className="h-4 w-4 text-emerald-500" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
               {totalEnrollments}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Aktif ve kayıtlı öğrenci</p>
+            <p className="text-xs text-muted-foreground mt-1">Aktif ve kayıtlı öğrenci</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Toplam Kontenjan Kapasitesi
             </CardTitle>
             <Layers className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {totalCapacity}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Maksimum öğrenci kapasitesi</p>
+            <p className="text-xs text-muted-foreground mt-1">Maksimum öğrenci kapasitesi</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-2xs">
-          <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Görevli Eğitmenler
             </CardTitle>
             <UserCheck className="h-4 w-4 text-violet-500" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div className="text-2xl font-bold text-violet-600 dark:text-violet-400">
               {totalTeachersAssigned}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Kurslara atanan öğretmen</p>
+            <p className="text-xs text-muted-foreground mt-1">Kurslara atanan öğretmen</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Table Card */}
-      <Card className="shadow-2xs">
+      <Card className="border border-border shadow-sm overflow-hidden">
         <CardHeader className="p-4 border-b border-border">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             {/* Search */}
@@ -514,15 +527,15 @@ function CoursesContent() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="text-xs">Kurs / Ders</TableHead>
-                    {isSuperAdmin && <TableHead className="text-xs">Kurum</TableHead>}
-                    <TableHead className="text-xs">Şube</TableHead>
-                    <TableHead className="text-xs">Eğitmen</TableHead>
-                    <TableHead className="text-xs">Ders Günleri & Saat</TableHead>
-                    <TableHead className="text-xs">Standart Ücret</TableHead>
-                    <TableHead className="text-xs">Kontenjan / Doluluk</TableHead>
-                    <TableHead className="text-right text-xs">İşlemler</TableHead>
+                  <TableRow>
+                    <TableHead>Kurs / Ders</TableHead>
+                    {isSuperAdmin && <TableHead>Kurum</TableHead>}
+                    <TableHead>Şube</TableHead>
+                    <TableHead>Eğitmen</TableHead>
+                    <TableHead>Ders Günleri & Saat</TableHead>
+                    <TableHead>Standart Ücret</TableHead>
+                    <TableHead>Kontenjan / Doluluk</TableHead>
+                    <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

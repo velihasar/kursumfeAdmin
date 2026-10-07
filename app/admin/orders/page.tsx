@@ -11,6 +11,7 @@ import {
   Truck,
   CheckCircle2,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -21,6 +22,13 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { OrderDetailDialog } from "@/components/admin/order-detail-dialog";
 import {
   Select,
@@ -286,102 +294,116 @@ export default function OrdersPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/admin" />}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Siparişler</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-
-      {/* Durum Filtreleme Butonları (Server-Side Enum) */}
-      <div className="flex flex-wrap items-center gap-2 border-b pb-4">
-        <Button
-          variant={statusFilter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusFilterChange("all")}
-          className="gap-2"
-        >
-          Tümü <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.total}</Badge>
-        </Button>
-        <Button
-          variant={statusFilter === OrderStatusEnum.Pending ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusFilterChange(OrderStatusEnum.Pending)}
-          className="gap-2"
-        >
-          <Clock className="h-3.5 w-3.5 text-amber-500" /> Beklemede
-          <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.pending}</Badge>
-        </Button>
-        <Button
-          variant={statusFilter === OrderStatusEnum.Processing ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusFilterChange(OrderStatusEnum.Processing)}
-          className="gap-2"
-        >
-          <Package className="h-3.5 w-3.5 text-blue-500" /> Hazırlanıyor
-          <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.processing}</Badge>
-        </Button>
-        <Button
-          variant={statusFilter === OrderStatusEnum.Shipped ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusFilterChange(OrderStatusEnum.Shipped)}
-          className="gap-2"
-        >
-          <Truck className="h-3.5 w-3.5 text-purple-500" /> Kargolandı
-          <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.shipped}</Badge>
-        </Button>
-        <Button
-          variant={statusFilter === OrderStatusEnum.Delivered ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusFilterChange(OrderStatusEnum.Delivered)}
-          className="gap-2"
-        >
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Teslim Edildi
-          <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.delivered}</Badge>
-        </Button>
-        <Button
-          variant={statusFilter === OrderStatusEnum.Cancelled ? "default" : "outline"}
-          size="sm"
-          onClick={() => handleStatusFilterChange(OrderStatusEnum.Cancelled)}
-          className="gap-2"
-        >
-          <XCircle className="h-3.5 w-3.5 text-rose-500" /> İptal
-          <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.cancelled}</Badge>
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <Spinner size="lg" className="mb-4" />
-          <p>Siparişler yükleniyor...</p>
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <Package className="h-8 w-8 text-primary" />
+            Sipariş Yönetimi
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gelen siparişleri, kargo durumlarını ve teslimat süreçlerini yönetin.
+          </p>
         </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={orders}
-          showSearch={true}
-          searchPlaceholder="Sipariş No, Müşteri Adı veya Tel Ara..."
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
-          totalRecords={totalRecords}
-          totalLabel="sipariş"
-          page={page}
-          pageSize={pageSize}
-          pageCount={totalPages}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          onRefresh={() => refetch()}
-          isRefreshing={isFetching}
-        />
-      )}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+            Yenile
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Card */}
+      <Card className="border border-border shadow-sm">
+        <CardHeader className="p-4 border-b border-border">
+          {/* Durum Filtreleme Butonları (Server-Side Enum) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={statusFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleStatusFilterChange("all")}
+              className="gap-2"
+            >
+              Tümü <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.total}</Badge>
+            </Button>
+            <Button
+              variant={statusFilter === OrderStatusEnum.Pending ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleStatusFilterChange(OrderStatusEnum.Pending)}
+              className="gap-2"
+            >
+              <Clock className="h-3.5 w-3.5 text-amber-500" /> Beklemede
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.pending}</Badge>
+            </Button>
+            <Button
+              variant={statusFilter === OrderStatusEnum.Processing ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleStatusFilterChange(OrderStatusEnum.Processing)}
+              className="gap-2"
+            >
+              <Package className="h-3.5 w-3.5 text-blue-500" /> Hazırlanıyor
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.processing}</Badge>
+            </Button>
+            <Button
+              variant={statusFilter === OrderStatusEnum.Shipped ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleStatusFilterChange(OrderStatusEnum.Shipped)}
+              className="gap-2"
+            >
+              <Truck className="h-3.5 w-3.5 text-purple-500" /> Kargolandı
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.shipped}</Badge>
+            </Button>
+            <Button
+              variant={statusFilter === OrderStatusEnum.Delivered ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleStatusFilterChange(OrderStatusEnum.Delivered)}
+              className="gap-2"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Teslim Edildi
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.delivered}</Badge>
+            </Button>
+            <Button
+              variant={statusFilter === OrderStatusEnum.Cancelled ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleStatusFilterChange(OrderStatusEnum.Cancelled)}
+              className="gap-2"
+            >
+              <XCircle className="h-3.5 w-3.5 text-rose-500" /> İptal
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{counts.cancelled}</Badge>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 sm:p-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Spinner size="lg" className="mb-4" />
+              <p>Siparişler yükleniyor...</p>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={orders}
+              showSearch={true}
+              searchPlaceholder="Sipariş No, Müşteri Adı veya Tel Ara..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              totalRecords={totalRecords}
+              totalLabel="sipariş"
+              page={page}
+              pageSize={pageSize}
+              pageCount={totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Sipariş Detay & Durum Modalı */}
       <OrderDetailDialog

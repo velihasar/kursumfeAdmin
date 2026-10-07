@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Layers } from "lucide-react";
+import { Plus, Edit, Trash2, Layers, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 
@@ -15,6 +15,13 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CategoryDialog } from "@/components/admin/category-dialog";
 import { CategoryProductGroupsDialog } from "@/components/admin/category-product-groups-dialog";
 import {
@@ -149,34 +156,49 @@ export default function CategoriesPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href="/admin" />}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Kategoriler</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        {role !== "VIEWER" && (
-          <Button onClick={() => { setSelected(null); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" /> Kategori Ekle
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <Layers className="h-8 w-8 text-primary" />
+            Kategori Yönetimi
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Ürün ana ve alt kategorilerini, ürün gruplarını ve hiyerarşiyi yönetin.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+            Yenile
           </Button>
-        )}
+          {role !== "VIEWER" && (
+            <Button onClick={() => { setSelected(null); setDialogOpen(true); }} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
+              <Plus className="mr-2 h-4 w-4" /> Kategori Ekle
+            </Button>
+          )}
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <Spinner size="lg" className="mb-4" />
-          <p>Kategoriler yükleniyor...</p>
-        </div>
-      ) : (
-        <DataTable columns={columns} data={categories} onRefresh={() => refetch()} isRefreshing={isFetching} />
-      )}
+      {/* Main Card */}
+      <Card className="border border-border shadow-sm">
+        <CardContent className="p-4 sm:p-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Spinner size="lg" className="mb-4" />
+              <p>Kategoriler yükleniyor...</p>
+            </div>
+          ) : (
+            <DataTable columns={columns} data={categories} />
+          )}
+        </CardContent>
+      </Card>
 
       <CategoryDialog
         open={dialogOpen}

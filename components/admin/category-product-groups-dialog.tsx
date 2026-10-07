@@ -323,7 +323,7 @@ export function CategoryProductGroupsDialog({
               <div className="border rounded-xl overflow-hidden shadow-2xs">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-muted/50 border-b text-muted-foreground uppercase tracking-wider font-semibold text-[11px]">
+                    <tr className="bg-muted/50 border-b border-border text-muted-foreground font-semibold text-xs">
                       <th className="py-2.5 px-4 w-12 text-center">#</th>
                       <th className="py-2.5 px-4">Grup Adı</th>
                       <th className="py-2.5 px-4">Slug (URL)</th>

@@ -18,6 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,7 +37,8 @@ import {
 // Icons
 import {
   Users,
-  UserPlus,
+  Plus,
+  RefreshCw,
   Search,
   Phone,
   Edit,
@@ -274,132 +283,150 @@ function ParentsContent() {
   const isLoading = isLoadingParents || isLoadingPeople;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in p-2 md:p-6">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-muted/50 via-muted/30 to-transparent p-5 rounded-2xl border border-border">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <Users className="w-7 h-7 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+            <Users className="h-8 w-8 text-primary" />
             Veli Rehberi
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Okulda kayıtlı olan tüm velilerin iletişim bilgilerini ve bağlı öğrencilerini görüntüleyin.
           </p>
         </div>
-        <Button onClick={handleOpenCreateModal} className="gap-2 font-medium shadow-xs">
-          <UserPlus className="w-4 h-4" />
-          Yeni Veli Kaydet
-        </Button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              refetchParents();
+              refetchPeople();
+            }}
+            disabled={isLoadingParents || isLoadingPeople}
+            className="h-10"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${(isLoadingParents || isLoadingPeople) ? "animate-spin" : ""}`} />
+            Yenile
+          </Button>
+          <Button onClick={handleOpenCreateModal} className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Veli Kaydet
+          </Button>
+        </div>
       </div>
 
-      {/* STATS CARDS */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-card border-border shadow-xs">
+        <Card className="border border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Toplam Veli Sayısı
             </CardTitle>
             <Users className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{totalParentsCount}</div>
-            <p className="text-[11px] text-muted-foreground mt-1">Kayıtlı aktif veli profili</p>
+            <p className="text-xs text-muted-foreground mt-1">Kayıtlı aktif veli profili</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border shadow-xs">
+        <Card className="border border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Telefonu Tanımlı Veliler
             </CardTitle>
             <Phone className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{parentsWithPhoneCount}</div>
-            <p className="text-[11px] text-muted-foreground mt-1">SMS ve iletişim kurulabilir veli</p>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{parentsWithPhoneCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">SMS ve iletişim kurulabilir veli</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border shadow-xs">
+        <Card className="border border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Öğrencisi Bağlı Veliler
             </CardTitle>
             <GraduationCap className="w-4 h-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{parentsWithChildrenCount}</div>
-            <p className="text-[11px] text-muted-foreground mt-1">En az bir öğrencisi olan veli</p>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{parentsWithChildrenCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">En az bir öğrencisi olan veli</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-card p-4 rounded-xl border border-border shadow-xs">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Veli adı, telefon, e-posta veya öğrenci adıyla ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-background h-9 text-xs"
-          />
-        </div>
-
-        {/* SuperAdmin Tenant Filter */}
-        {isSuperAdmin && (
-          <div className="w-full sm:w-64">
-            <select
-              value={selectedTenantId || ""}
-              onChange={(e) => setSelectedTenantId(Number(e.target.value) || undefined)}
-              className="w-full bg-background border border-input rounded-md px-3 h-9 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">-- Tüm Kurumlar (Tenants) --</option>
-              {tenants?.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+      {/* Main Table Card */}
+      <Card className="border border-border shadow-sm overflow-hidden">
+        <CardHeader className="p-4 border-b border-border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+              {isSuperAdmin && (
+                <div className="w-full sm:w-56">
+                  <select
+                    value={selectedTenantId || ""}
+                    onChange={(e) => setSelectedTenantId(Number(e.target.value) || undefined)}
+                    className={`w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring ${
+                      !selectedTenantId ? "text-muted-foreground" : "text-foreground font-medium"
+                    }`}
+                  >
+                    <option value="" className="text-muted-foreground">Tüm Kurumlar (Hepsi)</option>
+                    {tenants?.map((t) => (
+                      <option key={t.id} value={t.id} className="text-foreground">
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Veli adı, telefon, e-posta veya öğrenci adıyla ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 h-10"
+                />
+              </div>
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* PARENTS TABLE / LIST */}
-      <Card className="border-border shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-foreground">
-            <thead className="bg-muted/50 border-b border-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="py-3 px-4">Veli Ad Soyad</th>
-                <th className="py-3 px-4">Telefon Numarası</th>
-                <th className="py-3 px-4">E-Posta</th>
-                <th className="py-3 px-4">Bağlı Öğrencileri (Çocukları)</th>
-                {isSuperAdmin && <th className="py-3 px-4">Kurum</th>}
-                <th className="py-3 px-4 text-right">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Veli Adı Soyadı</TableHead>
+                <TableHead>Telefon Numarası</TableHead>
+                <TableHead>E-Posta</TableHead>
+                <TableHead>Bağlı Öğrenciler (Çocukları)</TableHead>
+                {isSuperAdmin && <TableHead>Kurum</TableHead>}
+                <TableHead className="text-right">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {isLoading ? (
-                <tr>
-                  <td colSpan={isSuperAdmin ? 6 : 5} className="py-8 text-center text-muted-foreground">
+                <TableRow>
+                  <TableCell colSpan={isSuperAdmin ? 6 : 5} className="py-8 text-center text-muted-foreground">
                     Veliler yükleniyor...
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : filteredParents.length === 0 ? (
-                <tr>
-                  <td colSpan={isSuperAdmin ? 6 : 5} className="py-8 text-center text-muted-foreground">
+                <TableRow>
+                  <TableCell colSpan={isSuperAdmin ? 6 : 5} className="py-8 text-center text-muted-foreground">
                     Arama kriterlerine uygun veli kaydı bulunamadı.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 filteredParents.map((parent) => {
                   const tenantName = tenants?.find((t) => t.id === parent.tenantId)?.name || `Kurum #${parent.tenantId}`;
 
                   return (
-                    <tr key={parent.id} className="hover:bg-muted/30 transition-colors">
-                      {/* Veli Ad Soyad */}
-                      <td className="py-3.5 px-4 font-semibold text-foreground flex items-center gap-2.5">
+                    <TableRow key={parent.id}>
+                      {/* Veli Adı Soyadı */}
+                      <TableCell className="font-semibold text-foreground flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
                           {parent.fName?.[0] || "V"}
                           {parent.lName?.[0] || ""}
@@ -408,10 +435,10 @@ function ParentsContent() {
                           <div>{parent.fullName}</div>
                           <span className="text-[10px] text-muted-foreground font-normal">ID: #{parent.id}</span>
                         </div>
-                      </td>
+                      </TableCell>
 
                       {/* Telefon */}
-                      <td className="py-3.5 px-4">
+                      <TableCell>
                         {parent.phoneNum ? (
                           <div className="flex items-center gap-1.5 font-mono text-xs text-foreground">
                             <span>{parent.phoneNum}</span>
@@ -432,19 +459,19 @@ function ParentsContent() {
                         ) : (
                           <span className="text-muted-foreground italic text-[11px]">Telefon girilmemiş</span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* E-Posta */}
-                      <td className="py-3.5 px-4 text-muted-foreground">
+                      <TableCell className="text-muted-foreground">
                         {parent.emailAddr ? (
                           <span className="text-foreground text-xs">{parent.emailAddr}</span>
                         ) : (
                           <span className="italic text-[11px]">-</span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* Bağlı Öğrenciler */}
-                      <td className="py-3.5 px-4">
+                      <TableCell>
                         {parent.linkedChildren.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {parent.linkedChildren.map((child) => (
@@ -456,7 +483,7 @@ function ParentsContent() {
                                 <GraduationCap className="w-3 h-3 opacity-70" />
                                 <span>{child.childName}</span>
                                 {child.relationship && (
-                                  <span className="opacity-75">({child.relationship})</span>
+                                   <span className="opacity-75">({child.relationship})</span>
                                 )}
                                 {child.isPrimary && (
                                   <span className="bg-primary-foreground text-primary rounded-full px-1 text-[9px] font-bold">
@@ -469,20 +496,20 @@ function ParentsContent() {
                         ) : (
                           <span className="text-muted-foreground italic text-[11px]">Bağlı öğrenci yok</span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* Kurum (SuperAdmin) */}
                       {isSuperAdmin && (
-                        <td className="py-3.5 px-4">
+                        <TableCell>
                           <Badge variant="secondary" className="text-[10px]">
                             <School className="w-3 h-3 mr-1 text-primary" />
                             {tenantName}
                           </Badge>
-                        </td>
+                        </TableCell>
                       )}
 
                       {/* İşlemler */}
-                      <td className="py-3.5 px-4 text-right space-x-1">
+                      <TableCell className="text-right space-x-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -505,14 +532,15 @@ function ParentsContent() {
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
+        </CardContent>
       </Card>
 
       {/* CREATE / EDIT PARENT DIALOG */}
@@ -534,7 +562,7 @@ function ParentsContent() {
               <div className="space-y-1.5">
                 <Label htmlFor="parent-tenant" className="flex items-center gap-1 text-xs font-medium">
                   <School className="w-3.5 h-3.5 text-primary" />
-                  Bağlı Olduğu Kurum (Tenant)
+                  Bağlı Olduğu Kurum
                 </Label>
                 <select
                   id="parent-tenant"
