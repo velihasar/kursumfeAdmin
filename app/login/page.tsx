@@ -61,15 +61,9 @@ function LoginForm() {
         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-96 h-96 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
         
         <div className="relative z-10 flex flex-col items-start">
-          <Logo
-            size="lg"
-            className="items-center"
-            textClassName="text-white text-3xl font-extrabold tracking-wide"
-            iconClassName="bg-white text-primary shadow-md h-11 w-11"
-          />
-          <p className="mt-4 text-primary-foreground/90 font-medium text-sm tracking-wide">
-            Eğitim Kurumları Bilgi ve Yönetim Sistemi
-          </p>
+          <div className="bg-white/95 backdrop-blur-xs rounded-3xl p-6 shadow-2xl">
+            <Logo size="3xl" priority />
+          </div>
         </div>
         
         <div className="relative z-10 max-w-md">
@@ -84,6 +78,9 @@ function LoginForm() {
 
       <div className="flex w-full lg:w-1/2 items-center justify-center bg-background p-8">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
+          <div className="flex justify-center lg:hidden">
+            <Logo size="default" priority />
+          </div>
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
               Yönetici Girişi

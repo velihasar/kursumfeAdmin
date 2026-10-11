@@ -193,7 +193,7 @@ export function Sidebar() {
       <div className={cn("flex h-16 items-center border-b border-border", isCollapsed ? "justify-center px-0" : "justify-between px-6")}>
         {!isCollapsed && (
           <Link href={logoHref} className="shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95">
-            <Logo className="w-32 text-primary" />
+            <Logo size="default" priority />
           </Link>
         )}
         <Button 
@@ -278,21 +278,29 @@ export function Sidebar() {
         )}
       >
         {isCollapsed ? (
-          <span
-            className="text-[10px] font-black tracking-tighter text-primary/80"
+          <a
+            href="https://www.masavtech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] font-black tracking-tighter text-primary/80 hover:text-primary transition-colors cursor-pointer"
             title="Masavtech Hizmetidir"
           >
             M
-          </span>
+          </a>
         ) : (
-          <div className="flex flex-col items-center gap-0.5">
-            <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              <span className="font-extrabold text-primary tracking-wider">MASAVTECH</span> HİZMETİDİR
+          <a
+            href="https://www.masavtech.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-0.5 group cursor-pointer transition-opacity hover:opacity-90"
+          >
+            <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase group-hover:text-foreground transition-colors">
+              <span className="font-extrabold text-primary tracking-wider group-hover:underline">MASAVTECH</span> HİZMETİDİR
             </p>
             <span className="text-[10px] text-muted-foreground/60 font-mono">
               © {new Date().getFullYear()}
             </span>
-          </div>
+          </a>
         )}
       </div>
     </div>
