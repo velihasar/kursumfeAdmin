@@ -2,6 +2,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
+  src?: string;
   className?: string;
   imageClassName?: string;
   size?: "sm" | "default" | "lg" | "xl" | "2xl" | "3xl";
@@ -14,6 +15,7 @@ interface LogoProps {
 }
 
 export function Logo({
+  src = "/logo.png",
   className,
   imageClassName,
   size = "default",
@@ -31,7 +33,7 @@ export function Logo({
   return (
     <div className={cn("inline-flex items-center select-none shrink-0", className)}>
       <Image
-        src="/logo.png"
+        src={src}
         alt="Kursum"
         width={320}
         height={100}

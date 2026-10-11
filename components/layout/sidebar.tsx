@@ -193,7 +193,7 @@ export function Sidebar() {
       <div className={cn("flex h-16 items-center border-b border-border", isCollapsed ? "justify-center px-0" : "justify-between px-6")}>
         {!isCollapsed && (
           <Link href={logoHref} className="shrink-0 cursor-pointer transition-transform hover:scale-105 active:scale-95">
-            <Logo size="default" priority />
+            <Logo src="/logoIn.png" size="default" priority />
           </Link>
         )}
         <Button 
