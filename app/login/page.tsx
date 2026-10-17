@@ -141,9 +141,9 @@ function LoginForm() {
           
           <div className="mt-8 flex flex-col gap-4 text-center lg:text-left">
             <p className="text-sm text-muted-foreground">
-              Yönetici hesabınız yok mu?{" "}
-              <Link href="/register" className="text-primary hover:underline font-medium">
-                Kayıt olun
+              Kurumunuzu Kursum'a dahil etmek mi istiyorsunuz?{" "}
+              <Link href="/register" className="text-primary hover:underline font-semibold">
+                Kurum Kayıt & Demo Başvurusu
               </Link>
             </p>
             <p className="text-xs text-muted-foreground">
