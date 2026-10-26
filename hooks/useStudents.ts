@@ -8,6 +8,10 @@ import {
   DeleteStudentCommand,
   StudentCreateResponseDto,
   StudentUpdateResponseDto,
+  RegisterFullStudentRequestDto,
+  RegisterFullStudentResponseDto,
+  ExcelBulkImportRequestDto,
+  ExcelBulkImportResponseDto,
 } from "@/types/student.types";
 import { ApiDataResult } from "@/types/branch.types";
 
@@ -94,3 +98,54 @@ export function useDeleteStudent() {
     },
   });
 }
+
+/**
+ * Tek Seferde İlişkili Öğrenci Kaydı
+ * POST /api/students/register-full
+ */
+export function useRegisterFullStudent() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    RegisterFullStudentResponseDto,
+    Error,
+    RegisterFullStudentRequestDto
+  >({
+    mutationFn: async (data: RegisterFullStudentRequestDto) => {
+      const response = await axiosInstance.post<RegisterFullStudentResponseDto>(
+        "/api/students/register-full",
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: studentKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Excel ile Toplu Öğrenci İçe Aktarma
+ * POST /api/students/bulk-excel-import
+ */
+export function useBulkExcelImportStudents() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ExcelBulkImportResponseDto,
+    Error,
+    ExcelBulkImportRequestDto
+  >({
+    mutationFn: async (data: ExcelBulkImportRequestDto) => {
+      const response = await axiosInstance.post<ExcelBulkImportResponseDto>(
+        "/api/students/bulk-excel-import",
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: studentKeys.lists() });
+    },
+  });
+}
+

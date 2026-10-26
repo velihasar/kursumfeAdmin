@@ -135,7 +135,7 @@ export function UserDialog({
             <Input
               id="email"
               type="email"
-              placeholder="Örn: ahmet@hakanwear.com"
+              placeholder="ornek@kursum.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

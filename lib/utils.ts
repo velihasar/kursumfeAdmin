@@ -100,14 +100,14 @@ export function getApiErrorMessage(err: any, fallback: string = "İşlem sıras�
 
 export function checkIsSuperAdmin(user?: any): boolean {
   if (!user) return false;
-  const userRole = (user.role || user.userRole || "").toString();
+  const userRole = (user.role || user.userRole || "").toString().trim().toLowerCase();
   const userTenantId = Number(user.tenantId ?? 0);
   const claims: string[] = Array.isArray(user.claims) ? user.claims : [];
 
   const hasSuperRole =
-    userRole.toUpperCase() === "SUPER_ADMIN" ||
-    userRole.toUpperCase() === "SUPERADMIN" ||
-    claims.some((c) => /^superadmin$|^SUPER_ADMIN$/i.test(c));
+    userRole === "superadmin" ||
+    userRole === "super_admin" ||
+    claims.some((c) => typeof c === "string" && (c.toLowerCase() === "superadmin" || c.toLowerCase() === "super_admin"));
 
   return hasSuperRole && userTenantId === 0;
 }
@@ -117,23 +117,18 @@ export function checkIsAdminOrOwner(user?: any): boolean {
   const userRole = (user.role || user.userRole || "").toString().trim().toLowerCase();
   const claims: string[] = Array.isArray(user.claims) ? user.claims : [];
 
-  const isAdminRole =
+  const isOwner =
     userRole === "kurumsahibi" ||
     userRole === "kurum sahibi" ||
-    userRole === "tenantadmin" ||
-    userRole === "admin" ||
-    userRole === "okul_admin" ||
-    userRole === "subeyonetici" ||
-    userRole === "şubeyönetici" ||
-    userRole === "sube yonetici" ||
-    userRole === "editor";
+    userRole === "superadmin" ||
+    userRole === "super_admin";
 
-  const hasAdminClaim = claims.some((c) =>
+  const hasOwnerClaim = claims.some((c) =>
     typeof c === "string" &&
-    /^kurumsahibi$|^kurum sahibi$|^tenantadmin$|^admin$|^okul_admin$|^subeyonetici$|^şubeyönetici$|^editor$/i.test(c.trim())
+    (c.toLowerCase() === "kurumsahibi" || c.toLowerCase() === "kurum sahibi" || c.toLowerCase() === "superadmin")
   );
 
-  return isAdminRole || hasAdminClaim;
+  return isOwner || hasOwnerClaim;
 }
 
 export function checkIsTeacher(user?: any): boolean {
@@ -142,14 +137,13 @@ export function checkIsTeacher(user?: any): boolean {
   const claims: string[] = Array.isArray(user.claims) ? user.claims : [];
 
   const isTeacherRole =
-    userRole === "teacher" ||
-    userRole === "ogretmen" ||
     userRole === "öğretmen" ||
-    userRole === "egitmen" ||
-    userRole === "eğitmen";
+    userRole === "ogretmen" ||
+    userRole === "teacher";
 
   const hasTeacherClaim = claims.some((c) =>
-    typeof c === "string" && /^teacher$|^ogretmen$|^öğretmen$|^egitmen$|^eğitmen$/i.test(c.trim())
+    typeof c === "string" &&
+    (c.toLowerCase() === "öğretmen" || c.toLowerCase() === "ogretmen" || c.toLowerCase() === "teacher")
   );
 
   return isTeacherRole || hasTeacherClaim;
@@ -157,7 +151,6 @@ export function checkIsTeacher(user?: any): boolean {
 
 export function checkIsOnlyTeacher(user?: any): boolean {
   if (!user) return false;
-  // Eğer SuperAdmin veya KurumSahibi/Admin yetkisi varsa, sadece öğretmen değildir
   if (checkIsSuperAdmin(user)) return false;
   if (checkIsAdminOrOwner(user)) return false;
 
@@ -171,12 +164,10 @@ export function checkIsParent(user?: any): boolean {
 
   const isParentRole =
     userRole === "veli" ||
-    userRole === "parent" ||
-    userRole === "ogrenciveli" ||
-    userRole === "öğrenciveli";
+    userRole === "parent";
 
   const hasParentClaim = claims.some((c) =>
-    typeof c === "string" && /^veli$|^parent$|^ogrenciveli$|^öğrenciveli$/i.test(c.trim())
+    typeof c === "string" && (c.toLowerCase() === "veli" || c.toLowerCase() === "parent")
   );
 
   return isParentRole || hasParentClaim;

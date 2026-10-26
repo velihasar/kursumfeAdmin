@@ -71,6 +71,7 @@ import {
   useCreateAttendance,
   useUpdateAttendance,
   useDeleteAttendance,
+  useBulkSaveAttendance,
 } from "@/hooks/useAttendances";
 import { useCourses } from "@/hooks/useCourses";
 import { useCourseEnrollments } from "@/hooks/useCourseEnrollments";
@@ -159,6 +160,7 @@ function AttendancesContent() {
   const createAttendanceMutation = useCreateAttendance();
   const updateAttendanceMutation = useUpdateAttendance();
   const deleteAttendanceMutation = useDeleteAttendance();
+  const bulkSaveAttendanceMutation = useBulkSaveAttendance();
   const [isSavingBulk, setIsSavingBulk] = useState(false);
 
   // State for "Take Attendance" Sheet
@@ -331,35 +333,18 @@ function AttendancesContent() {
 
     setIsSavingBulk(true);
     try {
-      const promises = attendanceSheet.map((item) => {
-        if (item.existingId && item.existingId > 0) {
-          // Update
-          const updateCmd: UpdateAttendanceCommand = {
-            id: item.existingId,
-            tenantId: selectedTenantId,
-            courseId: selectedCourseId,
-            studentId: item.studentId,
-            attendanceDate: `${attendanceDate}T00:00:00`,
-            isPresent: item.isPresent,
-            reason: item.reason?.trim() || undefined,
-          };
-          return updateAttendanceMutation.mutateAsync(updateCmd);
-        } else {
-          // Create
-          const createCmd: CreateAttendanceCommand = {
-            tenantId: selectedTenantId,
-            courseId: selectedCourseId,
-            studentId: item.studentId,
-            attendanceDate: `${attendanceDate}T00:00:00`,
-            isPresent: item.isPresent,
-            reason: item.reason?.trim() || undefined,
-          };
-          return createAttendanceMutation.mutateAsync(createCmd);
-        }
+      const res = await bulkSaveAttendanceMutation.mutateAsync({
+        tenantId: selectedTenantId,
+        courseId: selectedCourseId,
+        attendanceDate: `${attendanceDate}T00:00:00`,
+        items: attendanceSheet.map((item) => ({
+          studentId: item.studentId,
+          isPresent: item.isPresent,
+          reason: item.reason?.trim() || undefined,
+        })),
       });
 
-      await Promise.all(promises);
-      toast.success("Yoklama başarıyla kaydedildi!");
+      toast.success(res?.message || "Yoklama başarıyla kaydedildi!");
       refetchAttendances();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Yoklama kaydedilirken hata oluştu."));

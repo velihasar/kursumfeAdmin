@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from "@/hooks/useStudents";
+import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent, useRegisterFullStudent } from "@/hooks/useStudents";
 import { usePeople, useCreatePerson, useUpdatePerson, useUploadPersonPhoto } from "@/hooks/usePeople";
 import { useTenants } from "@/hooks/useTenants";
 import { useBranches } from "@/hooks/useBranches";
@@ -108,6 +108,7 @@ function StudentsContent() {
 
   // Mutations
   const createStudentMutation = useCreateStudent();
+  const registerFullStudentMutation = useRegisterFullStudent();
   const updateStudentMutation = useUpdateStudent();
   const deleteStudentMutation = useDeleteStudent();
   const createPersonMutation = useCreatePerson();
@@ -299,141 +300,37 @@ function StudentsContent() {
         refetchPeople();
         refetchStudentBranches();
       } else {
-        // Mode B: Creating New Student
-        let targetPersonId = selectedPersonId;
-
-        if (personSelectionMode === "new_person") {
-          if (!firstName.trim() || !lastName.trim()) {
-            toast.error("Lütfen ad ve soyad alanlarını doldurunuz.");
-            return;
-          }
-
-          // Step 1: Create Person
-          const personRes = await createPersonMutation.mutateAsync({
-            tenantId: isSuperAdmin ? selectedTenantId : undefined,
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: email.trim() || undefined,
-            phone: phone.replace(/\s+/g, "").trim() || undefined,
-            photoUrl: photoUrl.trim() || undefined,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
-          });
-
-          if (personRes?.data?.id) {
-            targetPersonId = personRes.data.id;
-          } else if ((personRes as any)?.Data?.Id) {
-            targetPersonId = (personRes as any).Data.Id;
-          } else {
-            const updatedPeople = await refetchPeople();
-            const createdPerson = updatedPeople.data?.find(
-              (p) => p.firstName === firstName.trim() && p.lastName === lastName.trim()
-            );
-            if (createdPerson) {
-              targetPersonId = createdPerson.id;
-            }
-          }
-        }
-
-        if (!targetPersonId) {
-          toast.error("Kişi kaydı oluşturulamadı veya seçilemedi.");
+        // Mode B: Creating New Student (Single Atomic Backend Transaction)
+        if (personSelectionMode === "new_person" && (!firstName.trim() || !lastName.trim())) {
+          toast.error("Lütfen ad ve soyad alanlarını doldurunuz.");
           return;
         }
 
-        // Step 2: Create Student
-        const studentRes = await createStudentMutation.mutateAsync({
-          tenantId: isSuperAdmin ? selectedTenantId : undefined,
-          personId: targetPersonId,
+        const effectiveTenant = isSuperAdmin ? selectedTenantId : userTenantId;
+
+        const res = await registerFullStudentMutation.mutateAsync({
+          tenantId: effectiveTenant,
+          existingPersonId: personSelectionMode === "existing_person" ? selectedPersonId : undefined,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim() || undefined,
+          phone: phone.replace(/\s+/g, "").trim() || undefined,
+          photoUrl: photoUrl.trim() || undefined,
+          dateOfBirth: dateOfBirth ? `${dateOfBirth}T00:00:00` : undefined,
           studentNumber: studentNumber.trim() || undefined,
-          enrollmentDate: new Date(enrollmentDate).toISOString(),
+          enrollmentDate: enrollmentDate ? `${enrollmentDate}T00:00:00` : undefined,
+          branchId: selectedBranchId,
+          includeParent: includeParent,
+          existingParentPersonId: parentMode === "existing_parent" ? selectedParentPersonId : undefined,
+          parentFirstName: parentMode === "new_parent" ? parentFirstName.trim() : undefined,
+          parentLastName: parentMode === "new_parent" ? parentLastName.trim() : undefined,
+          parentPhone: parentMode === "new_parent" ? parentPhone.replace(/\s+/g, "").trim() || undefined : undefined,
+          parentEmail: parentMode === "new_parent" ? parentEmail.trim() || undefined : undefined,
+          relationship: parentRelationship,
+          isPrimary: parentIsPrimary,
         });
 
-        let createdStudentId = (studentRes as any)?.data?.id || (studentRes as any)?.Data?.Id || (studentRes as any)?.id;
-        if (!createdStudentId) {
-          const updatedStudents = await refetchStudents();
-          const newSt = updatedStudents.data?.find((s) => s.personId === targetPersonId);
-          if (newSt) createdStudentId = newSt.id;
-        }
-
-        // Step 3: Create StudentBranch if selectedBranchId is chosen
-        if (createdStudentId && selectedBranchId) {
-          const targetTenant = isSuperAdmin ? selectedTenantId : userTenantId;
-          await createStudentBranchMutation.mutateAsync({
-            tenantId: targetTenant,
-            studentId: createdStudentId,
-            branchId: selectedBranchId,
-          });
-        }
-
-        // Step 4: Create & Link Parent if includeParent is selected
-        if (createdStudentId && includeParent) {
-          const targetTenant = isSuperAdmin ? selectedTenantId : userTenantId;
-
-          if (parentMode === "new_parent") {
-            if (parentFirstName.trim() && parentLastName.trim()) {
-              try {
-                const parentPersonRes: any = await createPersonMutation.mutateAsync({
-                  tenantId: isSuperAdmin ? selectedTenantId : undefined,
-                  firstName: parentFirstName.trim(),
-                  lastName: parentLastName.trim(),
-                  phone: parentPhone.replace(/\s+/g, "").trim() || undefined,
-                  email: parentEmail.trim() || undefined,
-                });
-
-                const parentPersonId = parentPersonRes?.data?.id || parentPersonRes?.Data?.Id || parentPersonRes?.id;
-
-                if (parentPersonId) {
-                  const parentRes: any = await createParentMutation.mutateAsync({
-                    personId: parentPersonId,
-                    tenantId: targetTenant,
-                  });
-
-                  const parentId = parentRes?.data?.id || parentRes?.Data?.Id || parentRes?.id;
-
-                  if (parentId) {
-                    await createStudentParentMutation.mutateAsync({
-                      studentId: createdStudentId,
-                      parentId: parentId,
-                      relationship: parentRelationship,
-                      isPrimary: parentIsPrimary,
-                      tenantId: targetTenant,
-                    });
-                  }
-                }
-              } catch (parentErr) {
-                console.error("Veli otomatik oluşturulurken hata:", parentErr);
-                toast.warning("Öğrenci oluşturuldu ancak veli kaydı eklenirken bir sorun oluştu. Daha sonra 'Veliler' butonundan ekleyebilirsiniz.");
-              }
-            }
-          } else if (parentMode === "existing_parent" && selectedParentPersonId) {
-            try {
-              let existingParent = parents?.find((p) => p.personId === selectedParentPersonId);
-              let parentId = existingParent?.id;
-
-              if (!parentId) {
-                const parentRes: any = await createParentMutation.mutateAsync({
-                  personId: selectedParentPersonId,
-                  tenantId: targetTenant,
-                });
-                parentId = parentRes?.data?.id || parentRes?.Data?.Id || parentRes?.id;
-              }
-
-              if (parentId) {
-                await createStudentParentMutation.mutateAsync({
-                  studentId: createdStudentId,
-                  parentId: parentId,
-                  relationship: parentRelationship,
-                  isPrimary: parentIsPrimary,
-                  tenantId: targetTenant,
-                });
-              }
-            } catch (parentErr) {
-              console.error("Mevcut veli bağlanırken hata:", parentErr);
-              toast.warning("Öğrenci oluşturuldu ancak veli bağlanırken bir sorun oluştu.");
-            }
-          }
-        }
-
-        toast.success("Yeni öğrenci kaydı başarıyla oluşturuldu.");
+        toast.success(res?.message || "Yeni öğrenci kaydı başarıyla oluşturuldu.");
         setIsFormOpen(false);
         refetchStudents();
         refetchPeople();
@@ -875,7 +772,7 @@ function StudentsContent() {
             {/* SuperAdmin Tenant Select Dropdown */}
             {isSuperAdmin && (
               <div className="space-y-2 p-4 rounded-lg border border-primary/20 bg-primary/5">
-                <Label htmlFor="tenantSelect" className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <Label htmlFor="tenantSelect" className="text-xs font-semibold text-primary flex items-center gap-1.5">
                   <Building2 className="h-4 w-4" />
                   Kurum / Okul Seçimi * (SuperAdmin)
                 </Label>
@@ -924,7 +821,7 @@ function StudentsContent() {
             {/* Person Form & Photo Upload (Show on New Person OR Edit Mode) */}
             {(personSelectionMode === "new_person" || personSelectionMode === "edit_person") && (
               <div className="space-y-4 p-4 rounded-lg border border-border/60 bg-card/50">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-primary flex items-center gap-1.5">
                   <UserPlus className="h-4 w-4" />
                   Kişi & Profil Fotoğrafı Bilgileri
                 </h4>
@@ -1074,7 +971,7 @@ function StudentsContent() {
 
             {/* Student Specific Details */}
             <div className="space-y-4 p-4 rounded-lg border border-border/60 bg-card/50">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-primary flex items-center gap-1.5">
                 <GraduationCap className="h-4 w-4" />
                 Öğrenci Okul Kaydı
               </h4>
@@ -1122,7 +1019,7 @@ function StudentsContent() {
             {!selectedStudent && (
               <div className="space-y-4 p-4 rounded-lg border border-indigo-500/30 bg-indigo-500/5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                  <h4 className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
                     <Users className="h-4 w-4" />
                     Veli Bilgileri (Hızlı Kayıt)
                   </h4>

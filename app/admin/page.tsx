@@ -9,7 +9,7 @@ import { useRoles } from "@/hooks/useRoles";
 import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useCourses } from "@/hooks/useCourses";
-import { usePayments } from "@/hooks/usePayments";
+import { usePayments, useFinancialSummary } from "@/hooks/usePayments";
 import { useStudentWallets } from "@/hooks/useStudentWallets";
 import { useAttendances } from "@/hooks/useAttendances";
 import { useFeeDues } from "@/hooks/useFeeDues";
@@ -76,6 +76,11 @@ export default function DashboardPage() {
   const { data: attendancesData, isLoading: attendancesLoading } = useAttendances();
   const { data: feeDuesData, isLoading: feeDuesLoading } = useFeeDues();
 
+  const userTenantId = (session?.user as any)?.tenantId || 0;
+  const { data: finMetrics } = useFinancialSummary(
+    userTenantId > 0 ? { tenantId: userTenantId } : undefined
+  );
+
   // Sayısal Değerler
   const totalTenants = Array.isArray(tenantsData) ? tenantsData.length : 0;
   const totalBranches = Array.isArray(branchesData) ? branchesData.length : 0;
@@ -91,8 +96,8 @@ export default function DashboardPage() {
   const attendances = Array.isArray(attendancesData) ? attendancesData : (attendancesData as any)?.data || [];
   const feeDues = Array.isArray(feeDuesData) ? feeDuesData : (feeDuesData as any)?.data || [];
 
-  const totalRevenue = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
-  const totalWalletBalance = wallets.reduce((sum: number, w: any) => sum + (Number(w.balance) || 0), 0);
+  const totalRevenue = finMetrics ? finMetrics.totalRevenue : payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+  const totalWalletBalance = finMetrics ? finMetrics.totalWalletBalance : wallets.reduce((sum: number, w: any) => sum + (Number(w.balance) || 0), 0);
 
   // Bu Ayki Tahsilat & Beklenen Ödemeler Hesabı
   const now = new Date();
@@ -106,18 +111,18 @@ export default function DashboardPage() {
   });
 
   const activeDuesForCalculation = thisMonthFeeDues.length > 0 ? thisMonthFeeDues : feeDues;
-  const thisMonthTotalExpected = activeDuesForCalculation.reduce((sum: number, f: any) => sum + (Number(f.amount) || 0), 0);
-  const thisMonthPaid = activeDuesForCalculation.reduce((sum: number, f: any) => sum + (Number(f.paidAmount) || 0), 0);
-  const thisMonthRemaining = activeDuesForCalculation.reduce((sum: number, f: any) => {
+  const thisMonthTotalExpected = finMetrics ? finMetrics.thisMonthTotalExpected : activeDuesForCalculation.reduce((sum: number, f: any) => sum + (Number(f.amount) || 0), 0);
+  const thisMonthPaid = finMetrics ? finMetrics.thisMonthPaid : activeDuesForCalculation.reduce((sum: number, f: any) => sum + (Number(f.paidAmount) || 0), 0);
+  const thisMonthRemaining = finMetrics ? finMetrics.thisMonthRemaining : activeDuesForCalculation.reduce((sum: number, f: any) => {
     const rem = Number(f.remainingAmount);
     if (!isNaN(rem) && rem > 0) return sum + rem;
     const calculatedRem = (Number(f.amount) || 0) - (Number(f.paidAmount) || 0);
     return sum + (calculatedRem > 0 ? calculatedRem : 0);
   }, 0);
 
-  const collectionRate = thisMonthTotalExpected > 0
+  const collectionRate = finMetrics ? finMetrics.collectionRate : (thisMonthTotalExpected > 0
     ? Math.min(100, Math.round((thisMonthPaid / thisMonthTotalExpected) * 100))
-    : (payments.length > 0 ? 100 : 0);
+    : (payments.length > 0 ? 100 : 0));
 
   // Vadesi geçmiş (Geciken) aidatlar
   const todayStr = now.toISOString().slice(0, 10);
@@ -127,7 +132,7 @@ export default function DashboardPage() {
     const isUnpaid = f.status !== 2 && (Number(f.remainingAmount) > 0 || ((Number(f.amount) || 0) > (Number(f.paidAmount) || 0)));
     return isPast && isUnpaid;
   });
-  const overdueTotalAmount = overdueDues.reduce((sum: number, f: any) => sum + (Number(f.remainingAmount) || ((Number(f.amount) || 0) - (Number(f.paidAmount) || 0))), 0);
+  const overdueTotalAmount = finMetrics ? finMetrics.overdueTotalAmount : overdueDues.reduce((sum: number, f: any) => sum + (Number(f.remainingAmount) || ((Number(f.amount) || 0) - (Number(f.paidAmount) || 0))), 0);
 
   const recentPayments = [...payments].slice(0, 5);
   const recentAttendances = [...attendances].slice(0, 5);

@@ -66,3 +66,26 @@ export interface AttendanceUpdateResponseDto {
   isPresent: boolean;
   reason?: string;
 }
+
+export interface BulkAttendanceItemDto {
+  studentId: number;
+  isPresent: boolean;
+  reason?: string;
+}
+
+export interface BulkAttendanceCreateDto {
+  tenantId?: number;
+  courseId: number;
+  attendanceDate: string;
+  items: BulkAttendanceItemDto[];
+}
+
+export interface BulkAttendanceResponseDto {
+  courseId: number;
+  attendanceDate: string;
+  totalProcessed: number;
+  presentCount: number;
+  absentCount: number;
+  message: string;
+}
+

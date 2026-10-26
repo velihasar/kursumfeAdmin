@@ -96,27 +96,28 @@ export const authOptions = {
           }
 
           const hasSuperAdminClaim =
-            /super/i.test(userRole) ||
-            claimsList.some((c) => /^SuperAdmin$|^SUPER_ADMIN$|^Super Admin$/i.test(c));
+            userRole.toLowerCase() === "superadmin" ||
+            userRole.toLowerCase() === "super_admin" ||
+            claimsList.some((c) => typeof c === "string" && (c.toLowerCase() === "superadmin" || c.toLowerCase() === "super_admin"));
+
+          const isOwnerClaim =
+            userRole.toLowerCase() === "kurumsahibi" ||
+            userRole.toLowerCase() === "kurum sahibi" ||
+            claimsList.some((c) => typeof c === "string" && (c.toLowerCase() === "kurumsahibi" || c.toLowerCase() === "kurum sahibi"));
+
+          const isTeacherClaim =
+            userRole.toLowerCase() === "öğretmen" ||
+            userRole.toLowerCase() === "ogretmen" ||
+            userRole.toLowerCase() === "teacher" ||
+            claimsList.some((c) => typeof c === "string" && (c.toLowerCase() === "öğretmen" || c.toLowerCase() === "ogretmen" || c.toLowerCase() === "teacher"));
 
           // Veli / Parent kontrolü: Eğer kullanıcı sadece veli ise yönetim paneline girişi engelle
           const isParentClaim =
-            /^Veli$|^Parent$|^OgrenciVeli$|^ÖğrenciVeli$/i.test(userRole) ||
-            claimsList.some((c) => /^Veli$|^Parent$|^OgrenciVeli$|^ÖğrenciVeli$/i.test(c));
+            userRole.toLowerCase() === "veli" ||
+            userRole.toLowerCase() === "parent" ||
+            claimsList.some((c) => typeof c === "string" && (c.toLowerCase() === "veli" || c.toLowerCase() === "parent"));
 
-          const adminClaim = claimsList.find((c) =>
-            /^KurumSahibi$|^Kurum Sahibi$|^TenantAdmin$|^SubeYonetici$|^OKUL_ADMIN$|^ADMIN$|^EDITOR$/i.test(c)
-          );
-
-          const isTeacherClaim = claimsList.some((c) =>
-            /^Teacher$|^Ogretmen$|^Öğretmen$|^Egitmen$|^Eğitmen$/i.test(c)
-          );
-
-          const hasManagementOrTeaching =
-            hasSuperAdminClaim ||
-            !!adminClaim ||
-            isTeacherClaim ||
-            /^KurumSahibi$|^TenantAdmin$|^SubeYonetici$|^ADMIN$|^Teacher$|^Ogretmen$|^Öğretmen$/i.test(userRole);
+          const hasManagementOrTeaching = hasSuperAdminClaim || isOwnerClaim || isTeacherClaim;
 
           if (isParentClaim && !hasManagementOrTeaching) {
             console.warn("Veli hesabı yönetim paneline girmeye çalıştı:", credentials.email);
@@ -124,17 +125,15 @@ export const authOptions = {
           }
 
           if (hasSuperAdminClaim && userTenantId === 0) {
-            userRole = "SUPER_ADMIN";
+            userRole = "SuperAdmin";
+          } else if (isOwnerClaim) {
+            userRole = "KurumSahibi";
+          } else if (isTeacherClaim) {
+            userRole = "Öğretmen";
+          } else if (isParentClaim) {
+            userRole = "Veli";
           } else {
-            if (adminClaim || /^KurumSahibi$|^TenantAdmin$|^SubeYonetici$|^ADMIN$/i.test(userRole)) {
-              userRole = adminClaim || (userRole && userRole !== "Person" && userRole !== "Unknown" ? userRole : "KurumSahibi");
-            } else if (isTeacherClaim || /^Teacher$|^Ogretmen$|^Öğretmen$|^Egitmen$|^Eğitmen$/i.test(userRole)) {
-              userRole = "Ogretmen";
-            } else if (isParentClaim) {
-              userRole = "Veli";
-            } else {
-              userRole = userRole && userRole !== "Person" && userRole !== "Unknown" ? userRole : "KurumSahibi";
-            }
+            userRole = "KurumSahibi";
           }
 
           return {

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ShieldCheck, Lock, Mail } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
+import { AuthBrandSidebar } from "@/components/auth/auth-brand-sidebar";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -55,28 +56,10 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sol Marka Kısmı */}
-      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-primary p-12 text-primary-foreground relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-96 h-96 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
-        
-        <div className="relative z-10 flex flex-col items-start">
-          <div className="bg-white/95 backdrop-blur-xs rounded-3xl p-6 shadow-2xl">
-            <Logo size="3xl" priority />
-          </div>
-        </div>
-        
-        <div className="relative z-10 max-w-md">
-          <h2 className="text-3xl font-bold leading-tight mb-4">
-            Eğitim kurumunuzun tüm operasyonlarını tek merkezden yönetin.
-          </h2>
-          <p className="text-primary-foreground/80 leading-relaxed">
-            Öğrenci, öğretmen, ders programı, yoklama ve taksitli tahsilat süreçleriniz için bütünleşik ve güvenli yönetim platformu.
-          </p>
-        </div>
-      </div>
+      {/* Sol Marka Kısmı (Sayfalar arası geçişte sabit) */}
+      <AuthBrandSidebar />
 
-      <div className="flex w-full lg:w-1/2 items-center justify-center bg-background p-8">
+      <div className="flex w-full lg:w-7/12 items-center justify-center bg-background p-8 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           <div className="flex justify-center lg:hidden">
             <Logo size="default" priority />

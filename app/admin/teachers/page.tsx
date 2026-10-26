@@ -841,7 +841,7 @@ function TeachersContent() {
             {/* SuperAdmin Tenant Select Dropdown */}
             {isSuperAdmin && (
               <div className="space-y-2 p-4 rounded-lg border border-primary/20 bg-primary/5">
-                <Label htmlFor="tenantSelect" className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <Label htmlFor="tenantSelect" className="text-xs font-semibold text-primary flex items-center gap-1.5">
                   <Building2 className="h-4 w-4" />
                   Kurum / Okul Seçimi * (SuperAdmin)
                 </Label>

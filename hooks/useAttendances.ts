@@ -8,6 +8,8 @@ import {
   DeleteAttendanceCommand,
   AttendanceCreateResponseDto,
   AttendanceUpdateResponseDto,
+  BulkAttendanceCreateDto,
+  BulkAttendanceResponseDto,
 } from "@/types/attendance.types";
 import { ApiDataResult } from "@/types/branch.types";
 
@@ -143,3 +145,29 @@ export function useDeleteAttendance() {
     },
   });
 }
+
+/**
+ * Toplu Yoklama Kaydet
+ * POST /api/attendances/bulk-save
+ */
+export function useBulkSaveAttendance() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    BulkAttendanceResponseDto,
+    Error,
+    BulkAttendanceCreateDto
+  >({
+    mutationFn: async (data: BulkAttendanceCreateDto) => {
+      const response = await axiosInstance.post<BulkAttendanceResponseDto>(
+        "/api/attendances/bulk-save",
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+    },
+  });
+}
+

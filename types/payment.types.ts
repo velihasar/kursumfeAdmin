@@ -64,3 +64,26 @@ export interface UpdatePaymentCommand {
 export interface DeletePaymentCommand {
   id: number;
 }
+
+export interface RecentPaymentItemDto {
+  id: number;
+  studentId: number;
+  studentFullName: string;
+  amount: number;
+  paymentDate: string;
+  paymentType: string;
+  receiptNo?: string;
+}
+
+export interface FinancialDashboardMetricsDto {
+  totalRevenue: number;
+  totalWalletBalance: number;
+  thisMonthTotalExpected: number;
+  thisMonthPaid: number;
+  thisMonthRemaining: number;
+  collectionRate: number;
+  overdueTotalAmount: number;
+  overdueDuesCount: number;
+  recentPayments: RecentPaymentItemDto[];
+}
+

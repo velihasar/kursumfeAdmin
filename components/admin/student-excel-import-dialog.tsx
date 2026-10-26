@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import * as XLSX from "xlsx";
-import { useCreateStudent } from "@/hooks/useStudents";
+import { useCreateStudent, useBulkExcelImportStudents } from "@/hooks/useStudents";
 import { useCreatePerson } from "@/hooks/usePeople";
 import { useCreateParent } from "@/hooks/useParents";
 import { useCreateStudentParent } from "@/hooks/useStudentParents";
@@ -143,6 +143,7 @@ export function StudentExcelImportDialog({
   const createParentMutation = useCreateParent();
   const createStudentParentMutation = useCreateStudentParent();
   const createStudentBranchMutation = useCreateStudentBranch();
+  const bulkExcelImportMutation = useBulkExcelImportStudents();
 
   // Dialog State
   const [importMode, setImportMode] = useState<ImportMode>("student_and_parent");
@@ -413,111 +414,51 @@ export function StudentExcelImportDialog({
     setIsProcessing(true);
     const targetTenant = isSuperAdmin ? selectedTenantId : tenantId;
 
-    let successCount = 0;
-    let failCount = 0;
-    const errors: string[] = [];
+    setProgress({
+      current: validRows.length,
+      total: validRows.length,
+      currentName: `${validRows.length} öğrenci aktarılıyor...`,
+    });
 
-    for (let i = 0; i < validRows.length; i++) {
-      const row = validRows[i];
-      setProgress({
-        current: i + 1,
-        total: validRows.length,
-        currentName: `${row.studentFirstName} ${row.studentLastName}`,
+    try {
+      const response = await bulkExcelImportMutation.mutateAsync({
+        tenantId: targetTenant,
+        importMode: "SkipDuplicates",
+        rows: validRows.map((r) => ({
+          firstName: r.studentFirstName,
+          lastName: r.studentLastName,
+          phone: r.studentPhone?.replace(/\s+/g, ""),
+          email: r.studentEmail,
+          dateOfBirth: r.studentDob ? `${r.studentDob}T00:00:00` : undefined,
+          enrollmentDate: r.enrollmentDate ? `${r.enrollmentDate}T00:00:00` : undefined,
+          branchId: r.matchedBranchId,
+          branchName: r.branchName,
+          parentFirstName: importMode === "student_and_parent" ? r.parentFirstName : undefined,
+          parentLastName: importMode === "student_and_parent" ? r.parentLastName : undefined,
+          parentPhone: importMode === "student_and_parent" ? r.parentPhone?.replace(/\s+/g, "") : undefined,
+          parentEmail: importMode === "student_and_parent" ? r.parentEmail : undefined,
+          relationship: r.relationship,
+          isPrimary: r.isPrimary ?? true,
+        })),
       });
 
-      try {
-        // Step 1: Create Student Person
-        const personRes: any = await createPersonMutation.mutateAsync({
-          tenantId: targetTenant,
-          firstName: row.studentFirstName,
-          lastName: row.studentLastName,
-          phone: row.studentPhone ? row.studentPhone.replace(/\s+/g, "") : undefined,
-          email: row.studentEmail || undefined,
-          dateOfBirth: row.studentDob ? new Date(row.studentDob).toISOString() : undefined,
-        });
+      const successCount = response.successCount;
+      const failCount = response.failedCount;
+      const errors = response.errorMessages || [];
 
-        const studentPersonId = personRes?.data?.id || personRes?.Data?.Id || personRes?.id;
-        if (!studentPersonId) {
-          throw new Error("Öğrenci kişi kaydı oluşturulamadı.");
-        }
+      setIsProcessing(false);
+      setImportResult({ successCount, failCount, errors });
 
-        // Step 2: Create Student Record
-        const studentRes: any = await createStudentMutation.mutateAsync({
-          tenantId: targetTenant,
-          personId: studentPersonId,
-          enrollmentDate: row.enrollmentDate ? new Date(row.enrollmentDate).toISOString() : new Date().toISOString(),
-        });
-
-        const studentId = studentRes?.data?.id || studentRes?.Data?.Id || studentRes?.id;
-        if (!studentId) {
-          throw new Error("Öğrenci kaydı oluşturulamadı.");
-        }
-
-        // Step 3: Assign Branch if matched
-        if (row.matchedBranchId) {
-          try {
-            await createStudentBranchMutation.mutateAsync({
-              tenantId: targetTenant,
-              studentId,
-              branchId: row.matchedBranchId,
-            });
-          } catch (bErr) {
-            console.warn(`Şube ataması yapılamadı (Öğrenci: ${row.studentFirstName}):`, bErr);
-          }
-        }
-
-        // Step 4: Create Parent & StudentParent if mode is student_and_parent
-        if (importMode === "student_and_parent" && row.parentFirstName && row.parentLastName) {
-          try {
-            const parentPersonRes: any = await createPersonMutation.mutateAsync({
-              tenantId: targetTenant,
-              firstName: row.parentFirstName,
-              lastName: row.parentLastName,
-              phone: row.parentPhone ? row.parentPhone.replace(/\s+/g, "") : undefined,
-              email: row.parentEmail || undefined,
-            });
-
-            const parentPersonId = parentPersonRes?.data?.id || parentPersonRes?.Data?.Id || parentPersonRes?.id;
-
-            if (parentPersonId) {
-              const parentRes: any = await createParentMutation.mutateAsync({
-                tenantId: targetTenant,
-                personId: parentPersonId,
-              });
-
-              const parentId = parentRes?.data?.id || parentRes?.Data?.Id || parentRes?.id;
-
-              if (parentId) {
-                await createStudentParentMutation.mutateAsync({
-                  tenantId: targetTenant,
-                  studentId,
-                  parentId,
-                  relationship: row.relationship || "Anne",
-                  isPrimary: row.isPrimary !== undefined ? row.isPrimary : true,
-                });
-              }
-            }
-          } catch (pErr) {
-            console.warn(`Veli kaydı oluşturulamadı (Öğrenci: ${row.studentFirstName}):`, pErr);
-          }
-        }
-
-        successCount++;
-      } catch (err: any) {
-        failCount++;
-        errors.push(`Satır ${row.rowNumber} (${row.studentFirstName} ${row.studentLastName}): ${err?.message || "Bilinmeyen hata"}`);
+      if (successCount > 0) {
+        toast.success(`${successCount} öğrenci kaydı başarıyla oluşturuldu!`);
+        onSuccess?.();
       }
-    }
-
-    setIsProcessing(false);
-    setImportResult({ successCount, failCount, errors });
-
-    if (successCount > 0) {
-      toast.success(`${successCount} öğrenci kaydı başarıyla oluşturuldu!`);
-      onSuccess?.();
-    }
-    if (failCount > 0) {
-      toast.warning(`${failCount} kayıt aktarılırken hata oluştu.`);
+      if (failCount > 0) {
+        toast.warning(`${failCount} kayıt aktarılırken sorun oluştu.`);
+      }
+    } catch (err: any) {
+      setIsProcessing(false);
+      toast.error(err?.message || "İçe aktarma sırasında sunucu hatası oluştu.");
     }
   };
 
@@ -545,7 +486,7 @@ export function StudentExcelImportDialog({
           {/* Institution Selector for SuperAdmin */}
           {isSuperAdmin && (
             <div className="space-y-2 p-3.5 rounded-lg border border-primary/20 bg-primary/5">
-              <Label htmlFor="importTenantSelect" className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <Label htmlFor="importTenantSelect" className="text-xs font-semibold text-primary flex items-center gap-1.5">
                 <Building2 className="h-4 w-4" />
                 Öğrencilerin Aktarılacağı Kurum / Okul *
               </Label>
@@ -569,7 +510,7 @@ export function StudentExcelImportDialog({
           {/* Mode Selection Tabs */}
           {!isProcessing && !importResult && (
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-xs font-semibold text-muted-foreground">
                 Aktarım Türü
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -634,7 +575,7 @@ export function StudentExcelImportDialog({
             <div className="p-4 rounded-xl border border-border/80 bg-muted/30 space-y-3">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                  <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     Beklenen Excel Kolon Formatı
                   </h4>
@@ -772,7 +713,7 @@ export function StudentExcelImportDialog({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  <span className="text-xs font-semibold text-foreground">
                     Veri Önizleme
                   </span>
                   <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">

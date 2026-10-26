@@ -6,6 +6,7 @@ import {
   CreatePaymentCommand,
   UpdatePaymentCommand,
   DeletePaymentCommand,
+  FinancialDashboardMetricsDto,
 } from "@/types/payment.types";
 import { ApiDataResult } from "@/types/branch.types";
 import { feeDueKeys } from "./useFeeDues";
@@ -20,7 +21,33 @@ export const paymentKeys = {
     paymentType?: number;
   }) => [...paymentKeys.all, "list", params] as const,
   detail: (id: number) => [...paymentKeys.all, "detail", id] as const,
+  summary: (params?: { tenantId?: number; year?: number; month?: number }) =>
+    [...paymentKeys.all, "summary", params] as const,
 };
+
+/**
+ * Finansal Dashboard Özeti (Backend tarafından hesaplanmış KPI'lar)
+ * GET /api/payments/financial-summary
+ */
+export function useFinancialSummary(params?: {
+  tenantId?: number;
+  year?: number;
+  month?: number;
+}) {
+  return useQuery<FinancialDashboardMetricsDto>({
+    queryKey: paymentKeys.summary(params),
+    queryFn: async () => {
+      const response = await axiosInstance.get<FinancialDashboardMetricsDto>(
+        "/api/payments/financial-summary",
+        {
+          params,
+        }
+      );
+      return response.data;
+    },
+    staleTime: 60 * 1000,
+  });
+}
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 

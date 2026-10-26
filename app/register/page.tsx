@@ -12,12 +12,12 @@ import {
   MapPin,
   Send,
   CheckCircle2,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/components/ui/logo";
+import { AuthBrandSidebar } from "@/components/auth/auth-brand-sidebar";
 
 const STUDENT_COUNT_OPTIONS = [
   "1 - 50 Öğrenci",
@@ -86,66 +86,11 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sol Marka ve Tanıtım Alanı */}
-      <div className="hidden lg:flex flex-col justify-between w-5/12 bg-primary p-12 text-primary-foreground relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 rounded-full bg-white opacity-5 mix-blend-overlay"></div>
-
-        <div className="relative z-10 flex flex-col items-start">
-          <div className="bg-white/95 backdrop-blur-xs rounded-3xl p-5 shadow-2xl">
-            <Logo size="3xl" priority />
-          </div>
-        </div>
-
-        <div className="relative z-10 space-y-6 max-w-lg">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border border-white/15">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Kurumsal Eğitim Yönetimi</span>
-          </div>
-
-          <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
-            Kurumunuzu Kursum ile Dijitalleştirin
-          </h2>
-
-          <p className="text-primary-foreground/80 text-sm leading-relaxed">
-            Eğitim süreçlerinizi, yoklamayı, ders programını ve kantin cüzdanını tek bir akıllı platformdan yönetin. Veli ve öğrencilerinizle kusursuz bir iletişim ağı kurun.
-          </p>
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-              </div>
-              <span className="text-xs text-primary-foreground/90">
-                Öğrenci, veli, öğretmen ve ders programı entegrasyonu
-              </span>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-              </div>
-              <span className="text-xs text-primary-foreground/90">
-                Akıllı kantin cüzdanı ve şeffaf online bakiye takibi
-              </span>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-              </div>
-              <span className="text-xs text-primary-foreground/90">
-                24 saat içinde sıfır veri kaybıyla kurumunuza özel kurulum
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} Kursum. Tüm hakları saklıdır.
-        </div>
-      </div>
+      {/* Sol Marka ve Tanıtım Alanı (Sayfalar arası geçişte sabit) */}
+      <AuthBrandSidebar />
 
       {/* Sağ Form Alanı */}
-      <div className="flex w-full lg:w-7/12 items-center justify-center bg-background p-6 md:p-12 overflow-y-auto">
+      <div className="flex w-full lg:w-7/12 items-center justify-center bg-background p-8 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-xl space-y-6 animate-fade-in py-6">
           <div className="flex justify-center lg:hidden mb-2">
             <Logo size="default" priority />
@@ -208,15 +153,15 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Yetkili Ad Soyad */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground uppercase tracking-wider" htmlFor="fullName">
-                      Yetkili Ad Soyad <span className="text-destructive">*</span>
+                    <label className="text-xs font-semibold text-foreground tracking-wide" htmlFor="fullName">
+                      Yetkili Adı Soyadı <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="fullName"
                         type="text"
-                        placeholder="Yetkili kişinin adını ve soyadını yazınız"
+                        placeholder="Yetkili kişinin adını ve soyadını giriniz"
                         className="pl-10 h-10"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
@@ -228,7 +173,7 @@ export default function RegisterPage() {
 
                   {/* Kurum Adı */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground uppercase tracking-wider" htmlFor="institutionName">
+                    <label className="text-xs font-semibold text-foreground tracking-wide" htmlFor="institutionName">
                       Kurum / Kurs Adı <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
@@ -236,7 +181,7 @@ export default function RegisterPage() {
                       <Input
                         id="institutionName"
                         type="text"
-                        placeholder="Kurumunuzun resmi veya tabela adını yazınız"
+                        placeholder="Kurumunuzun resmi veya tabela adını giriniz"
                         className="pl-10 h-10"
                         value={institutionName}
                         onChange={(e) => setInstitutionName(e.target.value)}
@@ -250,7 +195,7 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Telefon */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground uppercase tracking-wider" htmlFor="phone">
+                    <label className="text-xs font-semibold text-foreground tracking-wide" htmlFor="phone">
                       Telefon Numarası <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
@@ -258,7 +203,7 @@ export default function RegisterPage() {
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="Size ulaşabileceğimiz güncel telefon numaranız"
+                        placeholder="05XX XXX XX XX"
                         className="pl-10 h-10"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
@@ -270,15 +215,15 @@ export default function RegisterPage() {
 
                   {/* E-posta */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground uppercase tracking-wider" htmlFor="email">
-                      E-posta Adresi <span className="text-destructive">*</span>
+                    <label className="text-xs font-semibold text-foreground tracking-wide" htmlFor="email">
+                      E-Posta Adresi <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
-                        placeholder="Bilgilendirme için aktif e-posta adresiniz"
+                        placeholder="Kurumsal e-posta adresinizi giriniz"
                         className="pl-10 h-10"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -291,7 +236,7 @@ export default function RegisterPage() {
 
                 {/* Şehir / Lokasyon */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider" htmlFor="city">
+                  <label className="text-xs font-semibold text-foreground tracking-wide" htmlFor="city">
                     Şehir / İlçe
                   </label>
                   <div className="relative">
@@ -299,7 +244,7 @@ export default function RegisterPage() {
                     <Input
                       id="city"
                       type="text"
-                      placeholder="Kurumun bulunduğu il ve ilçeyi yazınız"
+                      placeholder="Kurumun bulunduğu şehir ve ilçeyi giriniz"
                       className="pl-10 h-10"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
@@ -310,7 +255,7 @@ export default function RegisterPage() {
 
                 {/* Tahmini Öğrenci Sayısı */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-foreground tracking-wide">
                     Tahmini Öğrenci Sayısı
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -333,8 +278,8 @@ export default function RegisterPage() {
 
                 {/* Ek Not / Mesaj */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider" htmlFor="message">
-                    Ek Açıklama / Talepleriniz (İsteğe Bağlı)
+                  <label className="text-xs font-semibold text-foreground tracking-wide" htmlFor="message">
+                    Ek Açıklama ve Talepleriniz (İsteğe Bağlı)
                   </label>
                   <textarea
                     id="message"

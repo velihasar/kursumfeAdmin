@@ -64,3 +64,70 @@ export interface StudentUpdateResponseDto {
 export interface StudentWithPersonDto extends StudentGetAllDto {
   person?: PersonGetAllDto;
 }
+
+export interface RegisterFullStudentRequestDto {
+  tenantId?: number;
+  existingPersonId?: number;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  photoUrl?: string;
+  studentNumber?: string;
+  enrollmentDate?: string;
+  branchId?: number;
+  includeParent?: boolean;
+  existingParentPersonId?: number;
+  parentFirstName?: string;
+  parentLastName?: string;
+  parentPhone?: string;
+  parentEmail?: string;
+  relationship?: string;
+  isPrimary?: boolean;
+}
+
+export interface RegisterFullStudentResponseDto {
+  studentId: number;
+  personId: number;
+  studentNumber?: string;
+  fullName: string;
+  parentId?: number;
+  parentFullName?: string;
+  branchId?: number;
+  branchName?: string;
+  message: string;
+}
+
+export interface ExcelImportStudentRowDto {
+  firstName: string;
+  lastName: string;
+  studentNumber?: string;
+  phone?: string;
+  email?: string;
+  dateOfBirth?: string;
+  enrollmentDate?: string;
+  branchId?: number;
+  branchName?: string;
+  parentFirstName?: string;
+  parentLastName?: string;
+  parentPhone?: string;
+  parentEmail?: string;
+  relationship?: string;
+  isPrimary?: boolean;
+}
+
+export interface ExcelBulkImportRequestDto {
+  tenantId?: number;
+  importMode?: string;
+  rows: ExcelImportStudentRowDto[];
+}
+
+export interface ExcelBulkImportResponseDto {
+  totalProcessed: number;
+  successCount: number;
+  failedCount: number;
+  errorMessages: string[];
+  importedStudentNames: string[];
+}
+
