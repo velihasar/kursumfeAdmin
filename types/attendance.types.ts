@@ -68,6 +68,7 @@ export interface AttendanceUpdateResponseDto {
 }
 
 export interface BulkAttendanceItemDto {
+  id?: number;
   studentId: number;
   isPresent: boolean;
   reason?: string;
@@ -77,15 +78,18 @@ export interface BulkAttendanceCreateDto {
   tenantId?: number;
   courseId: number;
   attendanceDate: string;
-  items: BulkAttendanceItemDto[];
+  records: BulkAttendanceItemDto[];
+  items?: BulkAttendanceItemDto[];
 }
 
 export interface BulkAttendanceResponseDto {
-  courseId: number;
-  attendanceDate: string;
-  totalProcessed: number;
-  presentCount: number;
-  absentCount: number;
-  message: string;
+  totalProcessed?: number;
+  createdCount?: number;
+  updatedCount?: number;
+  message?: string;
+  courseId?: number;
+  attendanceDate?: string;
+  presentCount?: number;
+  absentCount?: number;
 }
 

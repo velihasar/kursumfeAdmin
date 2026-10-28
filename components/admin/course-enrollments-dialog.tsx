@@ -94,10 +94,10 @@ export function CourseEnrollmentsDialog({
 
   const targetTenantId = course?.tenantId || tenantId;
 
-  // Queries
+  // Queries: Kurumdaki tüm kurs kayıtları çekilir (öğrencinin kurumda herhangi bir kursa kayıtlı olup olmadığını belirlemek için)
   const { data: allEnrollments, refetch: refetchEnrollments, isLoading } = useCourseEnrollments(
     targetTenantId
-      ? { tenantId: targetTenantId, courseId: course?.id }
+      ? { tenantId: targetTenantId }
       : undefined
   );
 
@@ -129,12 +129,17 @@ export function CourseEnrollmentsDialog({
     return allEnrollments.filter((e) => Number(e.courseId) === Number(course.id));
   }, [allEnrollments, course?.id]);
 
-  // Set of student IDs already enrolled in this course
+  // Set of student IDs already enrolled in ANY course in this institution (excluding cancelled enrollments)
   const enrolledStudentIds = useMemo(() => {
-    return new Set(courseEnrollments.map((e) => Number(e.studentId)));
-  }, [courseEnrollments]);
+    if (!allEnrollments) return new Set<number>();
+    return new Set(
+      allEnrollments
+        .filter((e) => e.status !== 4) // 4: İptal - iptal edilen kayıtlar hariç kurumda herhangi bir kursa kayıtlı olanlar
+        .map((e) => Number(e.studentId))
+    );
+  }, [allEnrollments]);
 
-  // Filter available students who are NOT enrolled in this course
+  // Filter available students: Kurumda hiç kursa ekli olmayan öğrenciler
   const availableStudents = useMemo(() => {
     if (!allStudents) return [];
     return allStudents.filter((s) => !enrolledStudentIds.has(Number(s.id)));
@@ -436,7 +441,7 @@ export function CourseEnrollmentsDialog({
                     Öğrenci Seçiniz *
                   </Label>
                   <span className="text-[11px] text-muted-foreground">
-                    ({availableStudents.length} kayıt edilebilir öğrenci)
+                    ({availableStudents.length} kursa ekli olmayan öğrenci)
                   </span>
                 </div>
 
@@ -476,7 +481,7 @@ export function CourseEnrollmentsDialog({
                       <div className="p-3 text-center text-xs text-muted-foreground">
                         {studentSearchTerm
                           ? "Aramanıza uygun kayıt edilebilir öğrenci bulunamadı."
-                          : "Bu kursa eklenebilecek (kayıtlı olmayan) öğrenci bulunamadı."}
+                          : "Kurumda henüz bir kursa eklenmemiş öğrenci bulunamadı."}
                       </div>
                     ) : (
                       filteredAvailableStudents.map((st) => (

@@ -333,15 +333,19 @@ function AttendancesContent() {
 
     setIsSavingBulk(true);
     try {
+      const formattedRecords = attendanceSheet.map((item) => ({
+        id: item.existingId,
+        studentId: item.studentId,
+        isPresent: item.isPresent,
+        reason: item.reason?.trim() || undefined,
+      }));
+
       const res = await bulkSaveAttendanceMutation.mutateAsync({
-        tenantId: selectedTenantId,
+        tenantId: selectedTenantId > 0 ? selectedTenantId : undefined,
         courseId: selectedCourseId,
         attendanceDate: `${attendanceDate}T00:00:00`,
-        items: attendanceSheet.map((item) => ({
-          studentId: item.studentId,
-          isPresent: item.isPresent,
-          reason: item.reason?.trim() || undefined,
-        })),
+        records: formattedRecords,
+        items: formattedRecords,
       });
 
       toast.success(res?.message || "Yoklama başarıyla kaydedildi!");
