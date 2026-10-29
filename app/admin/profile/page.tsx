@@ -29,6 +29,8 @@ import {
   Save,
   KeyRound,
   Building2,
+  MessagesSquare,
+  ChevronRight,
 } from "lucide-react";
 import { useUsers, useUserDetail, useChangePassword } from "@/hooks/useUsers";
 import { useTenant } from "@/hooks/useTenants";
@@ -375,6 +377,33 @@ export default function ProfilePage() {
               </Button>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* Uygulama Bilgisi & Destek (Bize Ulaşın) */}
+      <div className="bg-card border rounded-xl p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <MessagesSquare className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">
+                Bize Ulaşın (Şikayet, Öneri & Geri Bildirim)
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Sistemle ilgili şikayet, öneri, hata bildirimi veya destek taleplerinizi doğrudan MasavTech Destek Ekibi&apos;ne iletin.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/admin/bize-ulasin"
+            className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shrink-0"
+          >
+            <span>Bize Ulaşın</span>
+            <ChevronRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </div>

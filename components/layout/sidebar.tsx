@@ -24,6 +24,7 @@ import {
   Plus,
   Megaphone,
   CalendarDays,
+  MessagesSquare,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -162,16 +163,21 @@ export function Sidebar() {
       addHref: "/admin/roles?action=new",
       addTitle: "Yeni Rol Ekle",
     },
+    {
+      title: "Bize Ulaşın",
+      href: "/admin/bize-ulasin",
+      icon: MessagesSquare,
+    },
   ];
 
   let visibleItems: NavItem[] = [];
   if (isSuperAdmin) {
     visibleItems = navItems.filter((item) =>
-      ["/admin/tenants", "/admin/users", "/admin/roles"].includes(item.href)
+      ["/admin/tenants", "/admin/users", "/admin/roles", "/admin/bize-ulasin"].includes(item.href)
     );
   } else if (isOnlyTeacher) {
     visibleItems = navItems.filter((item) =>
-      item.href === "/admin/attendances"
+      ["/admin/attendances", "/admin/bize-ulasin"].includes(item.href)
     );
   } else {
     visibleItems = navItems.filter((item) => !item.superAdminOnly);

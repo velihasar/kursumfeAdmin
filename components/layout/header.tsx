@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ShieldCheck,
   Building2,
+  MessagesSquare,
 } from "lucide-react";
 import { useTenant } from "@/hooks/useTenants";
 import { checkIsSuperAdmin, getMinioUrl } from "@/lib/utils";
@@ -118,6 +119,12 @@ export function Header() {
                 <Link href="/admin/profile" className="flex items-center gap-2 w-full px-2 py-1.5 text-xs">
                   <User className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>Profil Bilgilerim</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="p-0 cursor-pointer">
+                <Link href="/admin/bize-ulasin" className="flex items-center gap-2 w-full px-2 py-1.5 text-xs">
+                  <MessagesSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Bize Ulaşın (Şikayet & Öneri)</span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

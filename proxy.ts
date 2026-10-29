@@ -40,6 +40,8 @@ export default async function proxy(req: NextRequest) {
         "/admin/users",
         "/admin/roles",
         "/admin/profile",
+        "/admin/bize-ulasin",
+        "/admin/contact",
         "/admin/unauthorized",
       ];
 
@@ -83,6 +85,8 @@ export default async function proxy(req: NextRequest) {
       const teacherAllowedPrefixes = [
         "/admin/attendances",
         "/admin/profile",
+        "/admin/bize-ulasin",
+        "/admin/contact",
         "/admin/unauthorized",
       ];
 
