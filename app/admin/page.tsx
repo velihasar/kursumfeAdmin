@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useTenants } from "@/hooks/useTenants";
@@ -12,7 +13,8 @@ import { useCourses } from "@/hooks/useCourses";
 import { usePayments, useFinancialSummary } from "@/hooks/usePayments";
 import { useStudentWallets } from "@/hooks/useStudentWallets";
 import { useAttendances } from "@/hooks/useAttendances";
-import { useFeeDues } from "@/hooks/useFeeDues";
+import { useFeeDues, useUnassignedFeeDueStudents } from "@/hooks/useFeeDues";
+import { BulkFeeDueDialog } from "@/components/admin/bulk-fee-due-dialog";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ import {
   AlertTriangle,
   CalendarDays,
   Coins,
+  Receipt,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -74,12 +77,32 @@ export default function DashboardPage() {
   const { data: paymentsData, isLoading: paymentsLoading } = usePayments();
   const { data: walletsData, isLoading: walletsLoading } = useStudentWallets();
   const { data: attendancesData, isLoading: attendancesLoading } = useAttendances();
-  const { data: feeDuesData, isLoading: feeDuesLoading } = useFeeDues();
+  const { data: feeDuesData, isLoading: feeDuesLoading, refetch: refetchFeeDues } = useFeeDues();
 
   const userTenantId = (session?.user as any)?.tenantId || 0;
-  const { data: finMetrics } = useFinancialSummary(
+  const { data: finMetrics, refetch: refetchFinMetrics } = useFinancialSummary(
     userTenantId > 0 ? { tenantId: userTenantId } : undefined
   );
+
+  const [isBulkFeeDueOpen, setIsBulkFeeDueOpen] = useState(false);
+
+  // Bu Ayki Tarih Bilgisi
+  const now = new Date();
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentMonthName = now.toLocaleString("tr-TR", { month: "long" });
+
+  // Bu ay aidatı henüz tanımlanmamış öğrencilerin backend özeti
+  const {
+    data: unassignedSummary,
+    isLoading: unassignedLoading,
+    refetch: refetchUnassigned,
+  } = useUnassignedFeeDueStudents({
+    period: currentYearMonth,
+    tenantId: userTenantId > 0 ? userTenantId : undefined,
+  });
+
+  const unassignedCount = unassignedSummary?.unassignedCount ?? 0;
+  const unassignedEstimatedTotal = unassignedSummary?.totalEstimatedAmount ?? 0;
 
   // Sayısal Değerler
   const totalTenants = Array.isArray(tenantsData) ? tenantsData.length : 0;
@@ -98,11 +121,6 @@ export default function DashboardPage() {
 
   const totalRevenue = finMetrics ? finMetrics.totalRevenue : payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
   const totalWalletBalance = finMetrics ? finMetrics.totalWalletBalance : wallets.reduce((sum: number, w: any) => sum + (Number(w.balance) || 0), 0);
-
-  // Bu Ayki Tahsilat & Beklenen Ödemeler Hesabı
-  const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const currentMonthName = now.toLocaleString("tr-TR", { month: "long" });
 
   const thisMonthFeeDues = feeDues.filter((f: any) => {
     if (f.period && f.period.startsWith(currentYearMonth)) return true;
@@ -580,6 +598,14 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsBulkFeeDueOpen(true)}
+            className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10 shadow-2xs"
+          >
+            <Receipt className="h-4 w-4" /> Toplu Aidat Ekle
+          </Button>
           <Link href="/admin/attendances?action=new">
             <Button variant="outline" size="sm" className="gap-1.5">
               <ClipboardCheck className="h-4 w-4 text-primary" /> Yoklama Al
@@ -597,6 +623,40 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ─── Aidat Hatırlatma & Aksiyon Bannerı ─── */}
+      {unassignedCount > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-background shadow-xs animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Receipt className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                <span>{currentMonthName} Ayı Aidat Borçlandırması Bekliyor</span>
+                <Badge variant="outline" className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs font-semibold">
+                  {unassignedCount} Öğrenci
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Bu ay aktif olup henüz aidat tahakkuku oluşturulmamış {unassignedCount} öğrenci bulunuyor. Tahmini ciro:{" "}
+                <strong className="text-foreground">
+                  {new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(unassignedEstimatedTotal)}
+                </strong>
+              </p>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => setIsBulkFeeDueOpen(true)}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-semibold gap-1.5 shrink-0 shadow-xs"
+          >
+            <Sparkles className="h-4 w-4" />
+            Toplu Aidat Tanımla
+          </Button>
+        </div>
+      )}
 
       {/* Kurum Sahibi İstatistik Kartları */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -909,6 +969,19 @@ export default function DashboardPage() {
           </div>
         </Card>
       </div>
+
+      {/* Toplu Aidat Tanımlama Dialogu */}
+      <BulkFeeDueDialog
+        open={isBulkFeeDueOpen}
+        onOpenChange={setIsBulkFeeDueOpen}
+        tenantId={userTenantId > 0 ? userTenantId : undefined}
+        initialPeriod={currentYearMonth}
+        onSuccess={() => {
+          refetchUnassigned();
+          refetchFeeDues();
+          refetchFinMetrics();
+        }}
+      />
     </div>
   );
 }

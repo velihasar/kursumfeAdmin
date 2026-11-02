@@ -6,6 +6,8 @@ import {
   CreateFeeDueCommand,
   UpdateFeeDueCommand,
   DeleteFeeDueCommand,
+  UnassignedFeeDuesSummaryDto,
+  GenerateMonthlyFeeDuesCommand,
 } from "@/types/feeDue.types";
 import { ApiDataResult } from "@/types/branch.types";
 
@@ -20,9 +22,39 @@ export const feeDueKeys = {
     period?: string;
   }) => [...feeDueKeys.all, "list", params] as const,
   detail: (id: number) => [...feeDueKeys.all, "detail", id] as const,
+  unassigned: (params?: {
+    period?: string;
+    tenantId?: number;
+    courseId?: number;
+    search?: string;
+  }) => [...feeDueKeys.all, "unassigned", params] as const,
 };
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
+
+/**
+ * Belirli bir dönem için henüz aidatı oluşturulmamış aktif öğrencilerin listesi ve özeti
+ * GET /api/feedues/unassigned-students
+ */
+export function useUnassignedFeeDueStudents(params?: {
+  period?: string;
+  tenantId?: number;
+  courseId?: number;
+  search?: string;
+}) {
+  return useQuery<UnassignedFeeDuesSummaryDto>({
+    queryKey: feeDueKeys.unassigned(params),
+    queryFn: async () => {
+      const response = await axiosInstance.get<UnassignedFeeDuesSummaryDto>(
+        "/api/feedues/unassigned-students",
+        {
+          params,
+        }
+      );
+      return response.data;
+    },
+  });
+}
 
 /**
  * Aidat / Tahakkuk Listesi
@@ -148,7 +180,7 @@ export function useGenerateMonthlyFeeDues() {
   return useMutation<
     ApiDataResult<number>,
     Error,
-    { period?: string; tenantId?: number }
+    GenerateMonthlyFeeDuesCommand
   >({
     mutationFn: async (data) => {
       const response = await axiosInstance.post<ApiDataResult<number>>(

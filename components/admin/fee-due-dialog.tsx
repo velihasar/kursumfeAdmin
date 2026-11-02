@@ -332,25 +332,48 @@ export function FeeDueDialog({
               onValueChange={handleEnrollmentChange}
               disabled={isLoadingEnrollments}
             >
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="w-full text-xs h-auto min-h-10 py-2 px-3 text-left">
                 <SelectValue placeholder="Öğrencinin kurs kaydını seçiniz...">
                   {courseEnrollmentId
                     ? (() => {
                         const en = activeEnrollments.find((e) => String(e.id) === courseEnrollmentId);
-                        return en ? `${en.studentName} — ${en.courseName}` : undefined;
+                        if (!en) return undefined;
+                        return (
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-left overflow-hidden py-0.5">
+                            <span className="font-semibold text-foreground truncate">{en.studentName}</span>
+                            <span className="text-muted-foreground text-[11px] truncate flex items-center gap-1">
+                              • <span>{en.courseName || `Kurs #${en.courseId}`}</span>
+                            </span>
+                          </div>
+                        );
                       })()
                     : undefined}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-72 w-[var(--radix-select-trigger-width)] min-w-[320px]">
                 {activeEnrollments.length > 0 ? (
                   activeEnrollments.map((e) => (
-                    <SelectItem key={e.id} value={String(e.id)}>
-                      {e.studentName} — {e.courseName || `Kurs #${e.courseId}`}
+                    <SelectItem
+                      key={e.id}
+                      value={String(e.id)}
+                      className="py-2.5 px-3 cursor-pointer border-b border-border/40 last:border-0"
+                    >
+                      <div className="flex flex-col gap-0.5 text-left w-full">
+                        <div className="font-semibold text-foreground text-xs">{e.studentName}</div>
+                        <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <BookOpen className="h-3 w-3 text-primary shrink-0" />
+                          <span className="truncate">{e.courseName || `Kurs #${e.courseId}`}</span>
+                          {e.customMonthlyFee && e.customMonthlyFee > 0 && (
+                            <span className="ml-auto text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
+                              ₺{e.customMonthlyFee.toLocaleString("tr-TR")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </SelectItem>
                   ))
                 ) : (
-                  <div className="p-2 text-xs text-muted-foreground text-center">
+                  <div className="p-3 text-xs text-muted-foreground text-center">
                     Aktif kurs kaydı bulunamadı
                   </div>
                 )}

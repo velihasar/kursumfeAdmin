@@ -69,3 +69,33 @@ export interface UpdateFeeDueCommand {
 export interface DeleteFeeDueCommand {
   id: number;
 }
+
+export interface UnassignedFeeDueStudentDto {
+  courseEnrollmentId: number;
+  studentId: number;
+  studentName: string;
+  studentNumber?: string;
+  parentName?: string;
+  parentPhoneNumber?: string;
+  courseId: number;
+  courseName: string;
+  branchId?: number;
+  branchName?: string;
+  suggestedAmount: number;
+  dueDayOfMonth: number;
+  suggestedDueDate: string;
+}
+
+export interface UnassignedFeeDuesSummaryDto {
+  period: string;
+  unassignedCount: number;
+  totalEstimatedAmount: number;
+  students: UnassignedFeeDueStudentDto[];
+}
+
+export interface GenerateMonthlyFeeDuesCommand {
+  tenantId?: number;
+  period?: string;
+  courseEnrollmentIds?: number[];
+  dueDate?: string;
+}

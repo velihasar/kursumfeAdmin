@@ -75,6 +75,7 @@ import { FeeDueGetAllDto } from "@/types/feeDue.types";
 import { PaymentGetAllDto } from "@/types/payment.types";
 import { FeeDueDialog } from "@/components/admin/fee-due-dialog";
 import { PaymentDialog } from "@/components/admin/payment-dialog";
+import { BulkFeeDueDialog } from "@/components/admin/bulk-fee-due-dialog";
 
 function PaymentsContent() {
   const searchParams = useSearchParams();
@@ -114,6 +115,8 @@ function PaymentsContent() {
 
   const [deletingPayment, setDeletingPayment] = useState<PaymentGetAllDto | null>(null);
   const [isDeletePaymentOpen, setIsDeletePaymentOpen] = useState(false);
+
+  const [isBulkFeeDueOpen, setIsBulkFeeDueOpen] = useState(false);
 
   // Queries
   const { data: tenants } = useTenants();
@@ -556,15 +559,12 @@ function PaymentsContent() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={handleGenerateMonthlyDues}
-                  disabled={generateMonthlyMutation.isPending}
+                  onClick={() => setIsBulkFeeDueOpen(true)}
                   className="h-9 text-xs gap-1.5 border-primary/40 hover:bg-primary/10 text-primary font-medium shrink-0 shadow-2xs"
-                  title="Tüm aktif kurs kayıtları için mevcut ayın aidatlarını otomatik oluşturur"
+                  title="Dönem aidatı henüz oluşturulmamış öğrencileri listeler ve toplu aidat tanımlama imkanı sunar"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-                  {generateMonthlyMutation.isPending
-                    ? "Tahakkuklar Oluşturuluyor..."
-                    : "⚡ Dönem Aidatlarını Otomatik Oluştur"}
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  ⚡ Toplu Dönem Aidatı Tanımla
                 </Button>
               </div>
 
@@ -956,6 +956,16 @@ function PaymentsContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Toplu Aidat Tanımlama Dialogu */}
+      <BulkFeeDueDialog
+        open={isBulkFeeDueOpen}
+        onOpenChange={setIsBulkFeeDueOpen}
+        tenantId={selectedTenantId > 0 ? selectedTenantId : undefined}
+        onSuccess={() => {
+          refetchFeeDues();
+        }}
+      />
     </div>
   );
 }
